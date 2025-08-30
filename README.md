@@ -22,7 +22,18 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 - **pnpm** (recommended) or npm/yarn
 - A **NIP-07** browser signer (e.g., Alby)
 
-### Install & run
+### Install & run (Docker)
+```bash
+# clone the repo
+git clone https://github.com/Letdown2491/nostrpass
+cd nostrpass
+# build and run docker image
+docker build --no-cache -t nostrpass .
+docker run --rm -p 8080:3000 nostrpass
+# then open the printed URL (usually http://localhost:5173)
+```
+
+### Install & run (NPM)
 ```bash
 # clone the repo
 git clone https://github.com/Letdown2491/nostrpass
