@@ -18,9 +18,8 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 ## Quick start
 
 ### Prerequisites
-- **Node.js 18+**
-- **pnpm** (recommended) or npm/yarn
-- A **NIP-07** browser signer (e.g., Alby)
+- **Node.js 18+** and **pnpm** or **Docker** installed.
+- A **NIP-07** browser signer such as Alby.
 
 ### Install & run (Docker)
 ```bash
@@ -48,7 +47,7 @@ pnpm build              # or: npm run build / yarn build
 
 ### Using the app
 - **Connect Nostr Signer**: authorize your browser extension when prompted.
-- **Unlock**: choose a passphrase; it’s kept in memory for this session only.
+- **Unlock**: choose a passphrase; it’s kept in memory for this session only, but is required to decrypt your login entries. If you use a different passphrase on next login, you will not be able to decrypt existing notes and you will not see them in the UI.
 - **Create a login**: click New Login, fill in fields (Title, Site, Username, Password, optional 2FA Secret Key, Notes), then Encrypt & Publish.
 - **Sync & decrypt**: the newest version of each item is fetched from your relays and decrypted locally after EOSE.
 
