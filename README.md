@@ -1,46 +1,55 @@
 # NostrPass
+A local-first password manager powered by **Nostr**. Your credentials are encrypted in the browser and synced as app-data events to your relays. Nothing sensitive leaves your device unencrypted.
 
-A minimal starter that:
-- Authenticates with **NIP-07** (browser signer).
-- Stores each vault record as a **kind 30078** (parameterized replaceable) Nostr event addressed by a `["d","com.you.pm:item:<uuid>"]` tag.
-- Encrypts all sensitive data client-side using **Argon2id** (vault key) + **HKDF subkeys** per item + **XChaCha20-Poly1305** AEAD.
-- Syncs via relays. Records are **newest-wins** per `d`.
+## Features
+- **NIP-07 sign-in**: Connect with a browser Nostr signer such as Alby.
+- **End-to-end encryption**: Client-side passphrase → Argon2id key derivation → XChaCha20-Poly1305 AEAD.
+- **Per-item addressing**: Each record is a **kind 30078** (parameterized-replaceable) event keyed by a `d` tag.
+- **Fast UI**: New/Edit via modals, searchable & sortable table, optional favicons.
+- **Copy helpers**: Click to copy **username**, **password**, or **2FA token** (with optional auto-clear).
+- **TOTP support**: Store a Base32 **2FA Secret Key**; live 30-second codes are shown in the table.
+- **Settings**: Synced and local device settings (favicons, blur 2FA, etc).
 
-> Nostr events strictly use only NIP-01 fields: `id, pubkey, created_at, kind, tags, content, sig`. `content` is the stringified ciphertext envelope.
+## How it works (short)
+- **Identity & signing**: A NIP-07 signer provides your pubkey (npub) and signs events.
+- **Storage & sync**: Items are **kind 30078** events with a stable `["d","com.you.pm:item:<uuid>"]`. The newest per `d` wins on relays.
+- **Encryption**: Your passphrase derives a key (Argon2id). Item content is encrypted with XChaCha20-Poly1305. KDF params are stored alongside ciphertext so another device can decrypt after you unlock.
 
 ## Quick start
 
+### Prerequisites
+- **Node.js 18+**
+- **pnpm** (recommended) or npm/yarn
+- A **NIP-07** browser signer (e.g., Alby)
+
+### Install & run
 ```bash
-pnpm i   # or npm i / yarn
-pnpm dev # open http://localhost:5173
+# clone the repo
+git clone https://github.com/Letdown2491/nostrpass
+cd nostrpass
+# install dependencies
+pnpm install            # or: npm install / yarn
+# start the dev server
+pnpm dev                # or: npm run dev / yarn dev
+# then open the printed URL (usually http://localhost:5173)
+pnpm build              # or: npm run build / yarn build
 ```
 
-Steps:
-1. Click **Connect Nostr Signer** (needs NIP-07 extension like Alby).
-2. Click **Unlock** and enter a passphrase (local only).
-3. Create a **New Login** and publish — it encrypts and sends a kind 30078 event to relays.
-4. Items list decrypts locally using your passphrase.
+### Using the app
+- **Connect Nostr Signer**: authorize your browser extension when prompted.
+- **Unlock**: choose a passphrase; it’s kept in memory for this session only.
+- **Create a login**: click New Login, fill in fields (Title, Site, Username, Password, optional 2FA Secret Key, Notes), then Encrypt & Publish.
+- **Sync & decrypt**: the newest version of each item is fetched from your relays and decrypted locally after EOSE.
 
-## Security model (brief)
+### Configuration
+- **Relays**: Update the default relay list in the code (e.g., src/App.tsx) to match your preferred read/write relays.
+- **Favicons**: You can show site icons in the table (DuckDuckGo ip3 or a custom proxy). Toggle and source are in Settings.
+- **Sorting & truncation**: Default sort (e.g., Title A→Z) and truncation (ellipsis with tooltip) can be configured in Settings.
 
-- **Local-first**: encryption happens in the browser; relays see ciphertext only.
-- **Vault key**: derived from passphrase via **Argon2id** (64MiB, t=3, p=1 by default).
-- **Per-item subkeys**: **HKDF-SHA256** with random 16-byte salt per item.
-- **Cipher**: **XChaCha20-Poly1305**.
-- **Envelope**: includes `kdf` params + `salt` so a new device can derive keys from any record plus the passphrase.
-- **Addressable records**: kind 30078 + `["d","com.you.pm:item:<uuid>"]`. Latest event per (`pubkey`,`kind`,`d`) wins.
+## Troubleshooting
+- **Signer not detected**: Make sure a NIP-07 extension is installed and enabled, then reload the page.
+- **No items after publish**: Check the browser console for relay OK acks and EOSE. Ensure at least one relay accepts writes and that you’re subscribed to the same relays for reads.
+- **Decryption errors**: Confirm you’ve unlocked with the same passphrase used to create your items. If you rotate your passphrase, old items can’t decrypt without the original.
 
-## Notes
-
-- This is a minimal starter: no migrations, no history UI, no clipboard hygiene yet.
-- For production: add autolock timers, export/import, history/versioning, TOTP, tags/folders, conflict resolution details, and remote signer (NIP-46) support.
-- Optional fallback store: write the same inner envelope as a **kind 4** DM-to-self (NIP-04) if you need legacy relay support.
-
----
-
-## Troubleshooting: “I don’t see my notes/items”
-
-- Make sure you clicked **Connect Nostr Signer** and then **Unlock**.
-- Ensure your relay list includes **at least one write-enabled relay**. Defaults: nos.lol, relay.damus.io, relay.snort.social.
-- Open DevTools → Console: after publishing you should see at least one `OK true` from a relay. If all `OK` are false, that relay is not accepting writes.
-- The app now **subscribes automatically** after you connect; items should appear after `EOSE`.
+## Security note
+This project is a starter/experimental app. Review the code, threat model, and your relay trust before storing highly sensitive data. Use at your own risk.
