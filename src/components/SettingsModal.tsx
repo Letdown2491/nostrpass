@@ -1,5 +1,8 @@
 import React from "react";
-import type { Settings } from "../state/settings";
+import type { Settings, TableSortKey, TableSortDir } from "../state/settings";
+
+const SORT_KEYS: TableSortKey[] = ["title", "site", "username", "updatedAt"];
+const SORT_DIRS: TableSortDir[] = ["asc", "desc"];
 
 export default function SettingsModal({
   open,
@@ -63,10 +66,13 @@ export default function SettingsModal({
       >
         <div className="text-lg font-semibold mb-4">Settings</div>
 
-        <form className="space-y-4" onSubmit={submit}>
-          <fieldset className="space-y-2">
-            <legend className="text-slate-400 text-xs mb-1">Display</legend>
+        <form className="space-y-5" onSubmit={submit}>
+          <fieldset className="space-y-3">
+            <legend className="text-slate-400 text-xs mb-1">
+              Display &amp; Table
+            </legend>
 
+            {/* Show deleted */}
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -78,6 +84,7 @@ export default function SettingsModal({
               Show deleted
             </label>
 
+            {/* Favicons on/off */}
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -88,10 +95,117 @@ export default function SettingsModal({
               />
               Show favicons
             </label>
-
             <p className="text-xs text-slate-500">
-              Favicons are fetched from a third-party service (DuckDuckGo ip3).
+              Favicons are loaded from a remote service. Disable for stricter
+              privacy.
             </p>
+
+            {/* Favicon source */}
+            <div className="text-sm space-y-2">
+              <div className="text-slate-400 text-xs">Favicon source</div>
+              <select
+                className="w-full sm:max-w-xs"
+                value={form.favicon.source}
+                onChange={(e) =>
+                  setForm((s) => ({
+                    ...s,
+                    favicon: {
+                      ...s.favicon,
+                      source: e.target.value as "ddg" | "custom",
+                    },
+                  }))
+                }
+              >
+                <option value="ddg">DuckDuckGo ip3</option>
+                <option value="custom">Custom proxy base URL</option>
+              </select>
+              {form.favicon.source === "custom" && (
+                <input
+                  className="w-full"
+                  placeholder="https://icons.example.com/ip3/"
+                  value={form.favicon.customBase || ""}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      favicon: { ...s.favicon, customBase: e.target.value },
+                    }))
+                  }
+                />
+              )}
+              <p className="text-xs text-slate-500">
+                Custom base should point to a service that returns{" "}
+                <code>.ico</code> for <em>hostname</em>. The app will request{" "}
+                <code>
+                  {`<base>`}
+                  {`<hostname>`}.ico
+                </code>
+                .
+              </p>
+            </div>
+
+            {/* Truncate long fields */}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.truncateFields}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, truncateFields: e.target.checked }))
+                }
+              />
+              Truncate long Title/Site with tooltip
+            </label>
+
+            {/* Default sort */}
+            <div className="text-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block">
+                <div className="text-slate-400 text-xs mb-1">
+                  Default sort key
+                </div>
+                <select
+                  className="w-full"
+                  value={form.defaultSort.key}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      defaultSort: {
+                        ...s.defaultSort,
+                        key: e.target.value as TableSortKey,
+                      },
+                    }))
+                  }
+                >
+                  {SORT_KEYS.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <div className="text-slate-400 text-xs mb-1">
+                  Default sort direction
+                </div>
+                <select
+                  className="w-full"
+                  value={form.defaultSort.dir}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      defaultSort: {
+                        ...s.defaultSort,
+                        dir: e.target.value as TableSortDir,
+                      },
+                    }))
+                  }
+                >
+                  {SORT_DIRS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </fieldset>
 
           <div className="flex items-center justify-end gap-2 pt-2">

@@ -39,8 +39,15 @@ function hostnameFromSite(site?: string | null): string | null {
   }
 }
 
-// favicon via DuckDuckGo ip3 service
-function faviconUrlForHost(host: string): string {
+// favicon URL from settings
+function faviconUrlForHost(host: string, settings: Settings): string {
+  if (settings.favicon?.source === "custom") {
+    const base = (settings.favicon.customBase || "").trim();
+    // ensure trailing slash
+    const normalized = base ? base.replace(/\/?$/, "/") : "";
+    return `${normalized}${host}.ico`;
+  }
+  // default to DuckDuckGo ip3
   return `https://icons.duckduckgo.com/ip3/${host}.ico`;
 }
 
@@ -67,6 +74,17 @@ export default function ItemList({
   const [query, setQuery] = React.useState("");
   const [sortBy, setSortBy] = React.useState<SortKey>("title");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
+  const sortInitRef = React.useRef(false);
+
+  // initialize sort from settings once
+  React.useEffect(() => {
+    if (sortInitRef.current) return;
+    if (settings?.defaultSort) {
+      setSortBy(settings.defaultSort.key as SortKey);
+      setSortDir(settings.defaultSort.dir);
+      sortInitRef.current = true;
+    }
+  }, [settings?.defaultSort]);
 
   // live TOTP codes map (idOrD -> code), refresh ONLY every 30s boundary
   const [otpMap, setOtpMap] = React.useState<Record<string, string>>({});
@@ -243,6 +261,12 @@ export default function ItemList({
 
   const visible = sorted;
 
+  // helper: conditional truncation classes + tooltip
+  const trunc = (enabled: boolean) =>
+    enabled
+      ? "block max-w-[40ch] overflow-hidden text-ellipsis whitespace-nowrap"
+      : "";
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -331,7 +355,7 @@ export default function ItemList({
                       <span className="inline-flex items-center gap-2">
                         {showFavicon ? (
                           <img
-                            src={faviconUrlForHost(host!)}
+                            src={faviconUrlForHost(host!, settings)}
                             alt=""
                             aria-hidden="true"
                             className="w-5 h-5 rounded-sm bg-slate-800/50"
@@ -348,7 +372,12 @@ export default function ItemList({
                             aria-hidden="true"
                           />
                         )}
-                        {it.title || "(untitled)"}
+                        <span
+                          className={trunc(settings.truncateFields)}
+                          title={String(it.title || "")}
+                        >
+                          {it.title || "(untitled)"}
+                        </span>
                       </span>
                     </td>
 
@@ -361,10 +390,20 @@ export default function ItemList({
                           className="underline decoration-dotted hover:decoration-solid"
                           title={siteHref}
                         >
-                          {it.site}
+                          <span
+                            className={trunc(settings.truncateFields)}
+                            title={String(it.site || "")}
+                          >
+                            {it.site}
+                          </span>
                         </a>
                       ) : (
-                        it.site || "—"
+                        <span
+                          className={trunc(settings.truncateFields)}
+                          title={String(it.site || "")}
+                        >
+                          {it.site || "—"}
+                        </span>
                       )}
                     </td>
 

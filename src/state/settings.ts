@@ -2,25 +2,46 @@ import type { NostrEvent } from "../lib/types";
 
 export const SETTINGS_D = "com.you.pm:settings:v1";
 
+// Keep in sync with your table's supported sort keys
+export type TableSortKey = "title" | "site" | "username" | "updatedAt";
+export type TableSortDir = "asc" | "desc";
+
 export type Settings = {
+  // existing
   showDeleted: boolean;
   showFavicons: boolean;
-  // room to grow:
-  // defaultSort?: { key: "title" | "site" | "username" | "updatedAt"; dir: "asc" | "desc" };
+
+  // new
+  truncateFields: boolean; // ellipsis + tooltip for long Title/Site
+  defaultSort: { key: TableSortKey; dir: TableSortDir };
+  favicon: {
+    source: "ddg" | "custom";
+    customBase?: string; // e.g. https://icons.example.com/ip3/
+  };
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   showDeleted: false,
   showFavicons: true,
+  truncateFields: true,
+  defaultSort: { key: "title", dir: "asc" },
+  favicon: { source: "ddg" },
 };
 
 export function parseSettingsEvent(ev: NostrEvent): Settings | null {
   try {
     const parsed = JSON.parse(ev.content || "{}");
-    // merge with defaults to be resilient to older versions
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      defaultSort: {
+        ...DEFAULT_SETTINGS.defaultSort,
+        ...(parsed?.defaultSort ?? {}),
+      },
+      favicon: {
+        ...DEFAULT_SETTINGS.favicon,
+        ...(parsed?.favicon ?? {}),
+      },
     } as Settings;
   } catch {
     return null;
@@ -28,7 +49,6 @@ export function parseSettingsEvent(ev: NostrEvent): Settings | null {
 }
 
 // Build a plaintext app-data event for settings (NIP-33 parameterized replaceable).
-// Uses NIP-07 (window.nostr) to sign.
 export async function buildSettingsEvent(
   pubkey: string,
   settings: Settings,
@@ -41,7 +61,6 @@ export async function buildSettingsEvent(
     pubkey,
   };
 
-  // Prefer NIP-07 signer
   const signer = (globalThis as any).nostr;
   if (!signer || typeof signer.signEvent !== "function") {
     throw new Error("No NIP-07 signer available to sign settings event");
