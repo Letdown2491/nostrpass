@@ -1,0 +1,65 @@
+# ----- Node / npm -----------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----- Build output ---------------------------------------------------------
+dist/
+build/
+# If you use a custom output folder, add it here
+
+# ----- Dependency caches ----------------------------------------------------
+/.pnp
+.pnp.js
+
+# ----- Environment variables ------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ----- IDE / editor specific -----------------------------------------------
+# VS Code
+.vscode/
+# JetBrains (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+
+# ----- OS generated files ---------------------------------------------------
+.DS_Store          # macOS
+Thumbs.db          # Windows
+ehthumbs.db
+Desktop.ini
+
+# ----- Miscellaneous --------------------------------------------------------
+coverage/          # Jest coverage reports
+*.log              # Generic log files
+.sass-cache/
+.cache/
+.tmp/
+tmp/
+*.tmp
+
+# ----- Storybook (if used) -------------------------------------------------
+.storybook/
+storybook-static/
+
+# ----- Cypress (if used) ---------------------------------------------------
+cypress/screenshots/
+cypress/videos/
+cypress/reports/
+
+# ----- Testing artifacts ----------------------------------------------------
+__tests__/output/
+jest.config.js
+jest.setup.js
+
+# ----- Public assets that are generated -------------------------------------
+public/build/
+public/static/
+
+# ----- Misc build artefacts -------------------------------------------------
+*.tsbuildinfo
