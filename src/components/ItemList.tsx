@@ -7,8 +7,9 @@ import {
 } from "../state/vault";
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
+import type { Settings } from "../state/settings";
 
-const NS_PREFIX = "com.you.pm:"; // only show items in our namespace
+const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 type SortKey = "title" | "site" | "username" | "type" | "updatedAt";
 const STEP = 30; // 30-second TOTP step
@@ -26,7 +27,7 @@ function toHref(site?: string | null): string | null {
   return null;
 }
 
-// extract hostname from site (adds https:// if needed). Browser URL will punycode IDNs.
+// extract hostname from site (adds https:// if needed)
 function hostnameFromSite(site?: string | null): string | null {
   const href = toHref(site);
   if (!href) return null;
@@ -48,14 +49,17 @@ export default function ItemList({
   pubkey,
   onPublish,
   onNewLogin,
+  settings,
+  onOpenSettings,
 }: {
   events: NostrEvent[];
   pubkey: string;
   onPublish: (ev: any) => Promise<PublishResult>;
   onNewLogin: () => void;
+  settings: Settings;
+  onOpenSettings: () => void;
 }) {
   const [rows, setRows] = React.useState<any[]>([]);
-  const [showDeleted, setShowDeleted] = React.useState(false);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
   const [editItem, setEditItem] = React.useState<any | null>(null);
 
@@ -89,7 +93,7 @@ export default function ItemList({
       const out: any[] = [];
       for (const ev of events) {
         const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-        if (!d.startsWith(NS_PREFIX)) continue; // skip others silently
+        if (!d.startsWith(NS_ITEM_PREFIX)) continue; // skip anything not our item namespace
         try {
           const obj = await decryptItemContentUsingSession(ev.content);
           out.push({ d, ...obj });
@@ -118,7 +122,7 @@ export default function ItemList({
     return () => clearInterval(t);
   }, [counter]);
 
-  // Recompute TOTP codes exactly when counter changes (i.e., every 30s boundary or when rows change)
+  // Recompute TOTP codes when rows or counter changes
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -186,15 +190,14 @@ export default function ItemList({
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows
-      .filter((r) => (showDeleted ? true : !r.deleted))
+      .filter((r) => (settings.showDeleted ? true : !r.deleted))
       .filter((r) => {
         if (!q) return true;
-        const hay = `${r.title ?? ""} ${r.site ?? ""} ${r.username ?? ""} ${
-          r.type ?? ""
-        }`.toLowerCase();
+        const hay =
+          `${r.title ?? ""} ${r.site ?? ""} ${r.username ?? ""} ${r.type ?? ""}`.toLowerCase();
         return hay.includes(q);
       });
-  }, [rows, query, showDeleted]);
+  }, [rows, query, settings.showDeleted]);
 
   const sorted = React.useMemo(() => {
     const arr = filtered.slice();
@@ -202,20 +205,16 @@ export default function ItemList({
       const va = a[sortBy] ?? "";
       const vb = b[sortBy] ?? "";
       let cmp = 0;
-      if (sortBy === "updatedAt") {
-        cmp = (va || 0) - (vb || 0);
-      } else {
-        cmp = String(va).localeCompare(String(vb));
-      }
+      if (sortBy === "updatedAt") cmp = (va || 0) - (vb || 0);
+      else cmp = String(va).localeCompare(String(vb));
       return sortDir === "asc" ? cmp : -cmp;
     });
     return arr;
   }, [filtered, sortBy, sortDir]);
 
   const toggleSort = (key: SortKey) => {
-    if (sortBy === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
+    if (sortBy === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
       setSortBy(key);
       setSortDir(key === "updatedAt" ? "desc" : "asc");
     }
@@ -242,15 +241,6 @@ export default function ItemList({
     }
   };
 
-  const fmtTime = (sec?: number) => {
-    if (!sec) return "—";
-    try {
-      return new Date(sec * 1000).toLocaleString();
-    } catch {
-      return String(sec);
-    }
-  };
-
   const visible = sorted;
 
   return (
@@ -272,14 +262,17 @@ export default function ItemList({
             New Login
           </button>
         </div>
-        <label className="text-xs flex items-center gap-2 ml-auto">
-          <input
-            type="checkbox"
-            checked={showDeleted}
-            onChange={(e) => setShowDeleted(e.target.checked)}
-          />
-          Show deleted
-        </label>
+
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+            type="button"
+            onClick={onOpenSettings}
+            title="Open settings"
+          >
+            Settings
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -316,7 +309,7 @@ export default function ItemList({
           <tbody>
             {visible.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-6 text-slate-400 text-center">
+                <td colSpan={6} className="py-6 text-slate-400 text-center">
                   No items yet.
                 </td>
               </tr>
@@ -328,14 +321,14 @@ export default function ItemList({
               const code = otpMap[key] || "—";
 
               const host = hostnameFromSite(it.site);
-              const showFavicon = !!host && !badFavicons[host];
+              const showFavicon =
+                settings.showFavicons && !!host && !badFavicons[host];
 
               return (
                 <tr key={key} className="border-b border-slate-800/60">
                   <>
                     <td className="py-2 px-2">
                       <span className="inline-flex items-center gap-2">
-                        {/* Favicon (16–20px), lazy, with fallback */}
                         {showFavicon ? (
                           <img
                             src={faviconUrlForHost(host!)}
