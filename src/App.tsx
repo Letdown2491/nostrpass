@@ -285,10 +285,7 @@ export default function App() {
     return (
       <div className="max-w-3xl mx-auto mt-8 space-y-6">
         <Unlock onUnlocked={handleUnlocked} />
-        <div className="max-w-md mx-auto text-center text-xs text-slate-500">
-          After unlocking, your vault will sync from the configured relays and
-          decrypt locally.
-        </div>
+        <div className="max-w-md mx-auto text-center text-xs text-slate-500"></div>
       </div>
     );
   }
