@@ -195,7 +195,6 @@ export default function App() {
         pubkey={pubkey!}
         onPublish={publish}
         settings={settings}
-        categories={settings.categories}
         onSaveSettings={saveSettings}
       />
 

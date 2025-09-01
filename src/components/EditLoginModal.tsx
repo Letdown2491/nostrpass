@@ -43,7 +43,11 @@ export default function EditLoginModal({
   React.useEffect(() => {
     if (!open || !item) return;
     setTitle(item.title ?? "");
-    setCategory(item.category ?? "");
+    const initialCategory =
+      item.category && settings.categories.includes(item.category)
+        ? item.category
+        : settings.categories[0] || "";
+    setCategory(initialCategory);
     setSite(item.site ?? "");
     setUsername(item.username ?? "");
     setPassword(item.password ?? "");
@@ -54,7 +58,7 @@ export default function EditLoginModal({
     setShowPassword(false);
     setShowTotpSecret(false);
     setStatus({ ok: null, text: "" });
-  }, [open, item]);
+  }, [open, item, settings.categories]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -72,11 +76,10 @@ export default function EditLoginModal({
     return new Date(sec * 1000).toLocaleString();
   }, [item]);
 
-  const sortedCategories = React.useMemo(() => {
-    const set = new Set(settings.categories || []);
-    if (category) set.add(category);
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [settings.categories, category]);
+  const sortedCategories = React.useMemo(
+    () => [...(settings.categories || [])].sort((a, b) => a.localeCompare(b)),
+    [settings.categories],
+  );
 
   if (!open || !item) return null;
 

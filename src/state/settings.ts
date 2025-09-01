@@ -54,7 +54,9 @@ export function parseSettingsEvent(ev: NostrEvent): Settings | null {
         ...(parsed?.favicon ?? {}),
       },
       categories: Array.isArray(parsed?.categories)
-        ? parsed.categories
+        ? Array.from(
+            new Set([...DEFAULT_SETTINGS.categories, ...parsed.categories]),
+          )
         : DEFAULT_SETTINGS.categories,
     } as Settings;
   } catch {

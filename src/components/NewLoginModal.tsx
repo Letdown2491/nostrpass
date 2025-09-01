@@ -27,7 +27,10 @@ export default function NewLoginModal({
   const [password, setPassword] = React.useState("");
   const [totpSecret, setTotpSecret] = React.useState(""); // 2FA secret (Base32)
   const [notes, setNotes] = React.useState("");
-  const [category, setCategory] = React.useState("Personal");
+  const defaultCategory = settings.categories.includes("Personal")
+    ? "Personal"
+    : "Uncategorized";
+  const [category, setCategory] = React.useState(defaultCategory);
   const [newCat, setNewCat] = React.useState("");
   const [addingCategory, setAddingCategory] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -57,10 +60,10 @@ export default function NewLoginModal({
     setShowPassword(false);
     setShowTotpSecret(false);
     setStatus({ ok: null, text: "" });
-    setCategory("Personal");
+    setCategory(defaultCategory);
     setNewCat("");
     setAddingCategory(false);
-  }, [open]);
+  }, [open, defaultCategory]);
 
   if (!open) return null;
 
@@ -71,7 +74,7 @@ export default function NewLoginModal({
     setPassword("");
     setTotpSecret("");
     setNotes("");
-    setCategory("Personal");
+    setCategory(defaultCategory);
     setNewCat("");
     setAddingCategory(false);
     setShowPassword(false);
@@ -88,6 +91,10 @@ export default function NewLoginModal({
     const id = uuidv4();
     const d = `com.you.pm:item:${id}`;
     const now = Math.floor(Date.now() / 1000);
+    const chosenCategory = settings.categories.includes(category)
+      ? category
+      : "Uncategorized";
+    if (chosenCategory !== category) setCategory(chosenCategory);
     const item = {
       id,
       type: "login",
@@ -97,7 +104,7 @@ export default function NewLoginModal({
       password,
       totpSecret, // <-- new field
       notes,
-      category,
+      category: chosenCategory,
       version: 1,
       createdAt: now,
       updatedAt: now,
