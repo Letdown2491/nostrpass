@@ -4,7 +4,7 @@ import { buildItemEvent } from "../state/vault";
 import type { Settings } from "../state/settings";
 import { generatePassword } from "../lib/crypto";
 import { passwordStrength } from "check-password-strength";
-import { ShowIcon, HideIcon, GenerateIcon } from "./Icons";
+import { ShowIcon, HideIcon, GenerateIcon, ScanCodeIcon } from "./Icons";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 

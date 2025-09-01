@@ -340,3 +340,47 @@ export const GenerateIcon = ({
     </g>
   </svg>
 );
+
+export interface ScanCodeIconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon – defaults to 32 px. */
+  size?: number | string;
+  /** Stroke colour – defaults to `currentColor` so it inherits surrounding text colour. */
+  color?: string;
+}
+
+/**
+ * Camera‑shaped “scan” icon.
+ *
+ * Example usage:
+ *   <ScanCodeIcon size={32} color="#34d399" />
+ *   <ScanCodeIcon className="text-slate-500 hover:text-slate-300" />
+ */
+export const ScanCodeIcon = ({
+  size = 32,
+  color = "currentColor",
+  ...svgProps
+}: ScanCodeIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...svgProps}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Camera body */}
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    {/* Lens */}
+    <circle cx="12" cy="12" r="3" />
+    {/* Top‑left “flash” / viewfinder */}
+    <path d="M2 7h4" />
+    {/* Bottom‑right “flash” / viewfinder */}
+    <path d="M20 7h-4" />
+    {/* Optional small “record” indicator – can be removed if you want a cleaner look */}
+    <circle cx="18" cy="9" r="0.8" fill={color} stroke="none" />
+  </svg>
+);

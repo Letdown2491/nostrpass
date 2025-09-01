@@ -6,7 +6,7 @@ import type { Settings } from "../state/settings";
 import { generatePassword } from "../lib/crypto";
 import { passwordStrength } from "check-password-strength";
 import TotpQrScanner from "./ToptQrScanner";
-import { ShowIcon, HideIcon, GenerateIcon } from "./Icons";
+import { ShowIcon, HideIcon, GenerateIcon, ScanCodeIcon } from "./Icons";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 
@@ -402,6 +402,15 @@ export default function NewLoginModal({
                   ) : (
                     <ShowIcon height="16" width="16" />
                   )}
+                </button>
+                <button
+                  type="button"
+                  className="px-3 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+                  onClick={() => setShowScanner(true)}
+                  title="Scan QR code"
+                >
+                  <ScanCodeIcon height="16" width="16" />
+                  {/* or simply put "Scan" as text if no icon */}
                 </button>
               </div>
             </label>
