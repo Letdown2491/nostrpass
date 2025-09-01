@@ -202,11 +202,26 @@ export default function NewLoginModal({
     try {
       await navigator.clipboard.writeText(pw);
       if (settings.clipboardClearSec) {
-        setTimeout(() => {
-          navigator.clipboard.writeText("").catch((e) => {
-            console.error("Failed to clear clipboard", e);
-          });
-        }, settings.clipboardClearSec * 1000);
+        let permitted = true;
+        if (navigator.permissions?.query) {
+          try {
+            const perm = await navigator.permissions.query({
+              name: "clipboard-write" as PermissionName,
+            });
+            permitted = perm.state === "granted";
+          } catch {
+            // ignore permission query errors
+          }
+        }
+        if (permitted) {
+          setTimeout(async () => {
+            try {
+              await navigator.clipboard.writeText("");
+            } catch {
+              // ignore failed clears
+            }
+          }, settings.clipboardClearSec * 1000);
+        }
       }
     } catch (e) {
       console.error("Failed to copy password", e);
