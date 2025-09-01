@@ -10,6 +10,7 @@ export default function TotpQrScanner({
 }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const startRef = React.useRef<() => void>();
 
   React.useEffect(() => {
     let stream: MediaStream;
@@ -67,11 +68,20 @@ export default function TotpQrScanner({
       } catch (err: any) {
         if (err?.name !== "AbortError") {
           console.error("camera error", err);
-          setError(err?.message || "Camera error");
+          if (err.name === "NotAllowedError") {
+            setError(
+              "Camera permission denied. Enable camera access and try again.",
+            );
+          } else if (err.name === "NotFoundError") {
+            setError("No camera device found.");
+          } else {
+            setError(err?.message || "Camera error");
+          }
         }
       }
     };
 
+    startRef.current = start;
     start();
 
     return () => {
@@ -90,7 +100,19 @@ export default function TotpQrScanner({
         ) : (
           <video ref={videoRef} className="w-64 h-64" />
         )}
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end mt-2 space-x-2">
+          {error && (
+            <button
+              type="button"
+              className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+              onClick={() => {
+                setError(null);
+                startRef.current?.();
+              }}
+            >
+              Retry
+            </button>
+          )}
           <button
             type="button"
             className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/10"
