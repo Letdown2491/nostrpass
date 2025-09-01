@@ -7,8 +7,8 @@ export const LogoIcon = ({
   className = "align-middle",
   // optional overrides for the two main colors
   bgColor = "",
-  lockColor = "rgba(155, 89, 182,1.0)",
-  keyholeColor = "#FFFFFF",
+  lockColor = "rgba(87, 95, 207,1.0)",
+  keyholeColor = "rgba(236, 240, 241,1.0)",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -177,6 +177,165 @@ export const SpinnerIcon = ({
             repeatCount="indefinite"
           />
         </path>
+      </g>
+    </g>
+  </svg>
+);
+
+export interface ShowIconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon – defaults to 24 px */
+  size?: number | string;
+  /** Stroke colour – defaults to `currentColor` so it inherits the surrounding text colour */
+  color?: string;
+}
+
+export const ShowIcon = ({
+  size = 32,
+  color = "currentColor",
+  ...svgProps
+}: ShowIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...svgProps}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Outer eye shape */}
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    {/* Pupil */}
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+export interface HideIconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon – defaults to 24 px */
+  size?: number | string;
+  /** Stroke colour – defaults to `currentColor` so it inherits the surrounding text colour */
+  color?: string;
+}
+
+/**
+ * An “eye‑slash” (hide) icon – eyeball with a diagonal line.
+ *
+ * Usage examples:
+ *   <HideIcon size={20} color="#f87171" />
+ *   <HideIcon className="text-slate-500 hover:text-slate-300" />
+ */
+export const HideIcon = ({
+  size = 32,
+  color = "currentColor",
+  ...svgProps
+}: HideIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...svgProps}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Outer eye shape */}
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    {/* Pupil */}
+    <circle cx="12" cy="12" r="3" />
+    {/* Diagonal slash – 45° from bottom‑left to top‑right */}
+    <line x1="4" y1="20" x2="20" y2="4" />
+  </svg>
+);
+
+export interface GenerateIconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon – defaults to 32 px (feel free to override). */
+  size?: number | string;
+  /** Fill colour – defaults to `currentColor` so it inherits the surrounding text colour. */
+  color?: string;
+}
+
+export const GenerateIcon = ({
+  size = 32,
+  color = "currentColor",
+  ...svgProps
+}: GenerateIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 512 512"
+    fill="{color}"
+    stroke={color}
+    xmlns="http://www.w3.org/2000/svg"
+    {...svgProps}
+  >
+    {/* ------------------------------------------------------------------ */}
+    {/*  The raw paths you gave – cleaned up a little for readability.      */}
+    {/* ------------------------------------------------------------------ */}
+    <g id="SVGRepo_iconCarrier">
+      <style type="text/css">{".st0{fill:#ffffff;}"}</style>
+      <g>
+        <path
+          className="st0"
+          d="M449.528,105.602L288.459,8.989C278.469,2.994,267.232,0,255.993,0c-11.225,0-22.463,2.994-32.452,8.989 L62.471,105.602c-19.012,11.406-30.64,31.95-30.64,54.117v192.562c0,22.168,11.628,42.711,30.64,54.117l161.069,96.613 c9.989,5.988,21.228,8.989,32.452,8.989c11.239,0,22.476-3.001,32.466-8.989l161.069-96.613 c19.013-11.406,30.64-31.95,30.64-54.117V159.719C480.168,137.552,468.541,117.008,449.528,105.602z M250.595,492.733 c-6.028-0.745-11.936-2.712-17.321-5.948L72.206,390.172c-13.306-7.99-21.456-22.37-21.456-37.891V159.719 c0-6.022,1.242-11.862,3.518-17.233l196.328,117.76V492.733z M59.665,133.114c3.37-4.464,7.593-8.318,12.54-11.285l161.069-96.613 c6.996-4.196,14.85-6.291,22.718-6.291c7.882,0,15.737,2.095,22.732,6.291l161.069,96.613c4.942,2.967,9.171,6.821,12.54,11.285 L255.993,250.881L59.665,133.114z M461.249,352.281c0,15.521-8.15,29.901-21.456,37.891l-161.069,96.613 c-5.397,3.236-11.292,5.203-17.32,5.948V260.246l196.328-117.76c2.282,5.37,3.518,11.211,3.518,17.233V352.281z"
+        />
+        <path
+          className="st0"
+          d="M367.96,114.498c-10.809-8.01-28.626-8.204-39.784-0.45c-11.158,7.754-11.44,20.543-0.631,28.546 c10.822,8.002,28.626,8.203,39.784,0.45C378.487,135.282,378.769,122.507,367.96,114.498z"
+        />
+        <path
+          className="st0"
+          d="M183.676,112.289c-10.816-8.003-28.626-8.211-39.784-0.45c-11.158,7.754-11.44,20.536-0.631,28.538 c10.808,8.009,28.626,8.204,39.784,0.456C194.203,133.067,194.484,120.291,183.676,112.289z"
+        />
+        <path
+          className="st0"
+          d="M89.285,248.303c11.158,6.083,20.194,1.961,20.194-9.19c0-11.158-9.036-25.129-20.194-31.21 c-11.158-6.083-20.201-1.967-20.201,9.19C69.084,228.244,78.127,242.221,89.285,248.303z"
+        />
+        <path
+          className="st0"
+          d="M202.057,309.771c11.164,6.082,20.207,1.967,20.207-9.184c0-11.157-9.043-25.135-20.207-31.217 c-11.144-6.076-20.194-1.961-20.194,9.198C181.863,289.719,190.913,303.689,202.057,309.771z"
+        />
+        <path
+          className="st0"
+          d="M89.285,361.082c11.158,6.083,20.194,1.967,20.194-9.19c0-11.158-9.036-25.129-20.194-31.21 c-11.158-6.083-20.201-1.968-20.201,9.19C69.084,341.029,78.127,355,89.285,361.082z"
+        />
+        <path
+          className="st0"
+          d="M202.057,422.55c11.164,6.082,20.207,1.967,20.207-9.191c0-11.151-9.043-25.128-20.207-31.21 c-11.144-6.076-20.194-1.961-20.194,9.19C181.863,402.497,190.913,416.468,202.057,422.55z"
+        />
+        <path
+          className="st0"
+          d="M145.671,335.43c11.158,6.076,20.201,1.96,20.201-9.198c0-11.151-9.043-25.128-20.201-31.204 c-11.15-6.082-20.2-1.967-20.2,9.184C125.471,315.37,134.521,329.341,145.671,335.43z"
+        />
+        <path
+          className="st0"
+          d="M414.538,204.559c-11.158,6.082-20.194,20.052-20.194,31.21c0,11.158,9.036,15.273,20.194,9.191 c11.157-6.083,20.207-20.053,20.207-31.211C434.745,202.591,425.695,198.476,414.538,204.559z"
+        />
+        <path
+          className="st0"
+          d="M414.538,270.33c-11.158,6.09-20.194,20.053-20.194,31.211c0,11.158,9.036,15.273,20.194,9.198 c11.157-6.083,20.207-20.06,20.207-31.211C434.745,268.37,425.695,264.248,414.538,270.33z"
+        />
+        <path
+          className="st0"
+          d="M316.36,302.642c11.158-6.082,20.208-20.053,20.208-31.211c0-11.151-9.05-15.266-20.208-9.19 c-11.158,6.082-20.194,20.059-20.194,31.21C296.166,304.609,305.203,308.724,316.36,302.642z"
+        />
+        <path
+          className="st0"
+          d="M414.538,336.108c-11.158,6.082-20.194,20.053-20.194,31.204c0,11.158,9.036,15.273,20.194,9.198 c11.157-6.083,20.207-20.06,20.207-31.218C434.745,334.141,425.695,330.026,414.538,336.108z"
+        />
+        <path
+          className="st0"
+          d="M316.36,393.79c-11.158,6.082-20.194,20.053-20.194,31.211c0,11.15,9.037,15.266,20.194,9.184 c11.158-6.076,20.208-20.053,20.208-31.204C336.568,391.823,327.518,387.708,316.36,393.79z"
+        />
+        <path
+          className="st0"
+          d="M317.569,328.018c-11.158,6.076-20.194,20.053-20.194,31.204c0,11.158,9.036,15.273,20.194,9.191 c11.158-6.082,20.208-20.053,20.208-31.21C337.776,326.052,328.727,321.936,317.569,328.018z"
+        />
       </g>
     </g>
   </svg>

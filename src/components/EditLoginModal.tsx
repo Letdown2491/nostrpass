@@ -4,6 +4,7 @@ import { buildItemEvent } from "../state/vault";
 import type { Settings } from "../state/settings";
 import { generatePassword } from "../lib/crypto";
 import { passwordStrength } from "check-password-strength";
+import { ShowIcon, HideIcon, GenerateIcon } from "./Icons";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 
@@ -327,7 +328,11 @@ export default function EditLoginModal({
                 aria-pressed={showPassword}
                 title={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? (
+                  <HideIcon height="16" width="16" />
+                ) : (
+                  <ShowIcon height="16" width="16" />
+                )}
               </button>
               <button
                 type="button"
@@ -335,7 +340,7 @@ export default function EditLoginModal({
                 onClick={genPassword}
                 title="Generate password"
               >
-                Generate
+                <GenerateIcon height="16" width="16" />
               </button>
             </div>
             {password && (
@@ -371,7 +376,11 @@ export default function EditLoginModal({
                 aria-pressed={showTotpSecret}
                 title={showTotpSecret ? "Hide secret" : "Show secret"}
               >
-                {showTotpSecret ? "Hide" : "Show"}
+                {showTotpSecret ? (
+                  <HideIcon height="16" width="16" />
+                ) : (
+                  <ShowIcon height="16" width="16" />
+                )}
               </button>
             </div>
           </label>
