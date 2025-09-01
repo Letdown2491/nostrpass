@@ -22,7 +22,7 @@ export default function Unlock({
   return (
     <form
       onSubmit={submit}
-      className="max-w-md mx-auto mt-10 space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/60"
+      className="max-w-md mx-auto mt-24 space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/60"
     >
       <h2 className="text-3xl font-semibold inline-flex">
         <LogoIcon height="34" width="36" />
@@ -30,7 +30,7 @@ export default function Unlock({
       </h2>
       <input
         type="password"
-        placeholder="Enter your vault passphrase"
+        placeholder="Enter vault passphrase to continue"
         value={pw}
         onChange={(e) => setPw(e.target.value)}
         className="w-full"
