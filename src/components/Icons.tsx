@@ -33,3 +33,23 @@ export const LogoIcon = ({
     <rect x="31" y="41" width="2" height="6" fill={keyholeColor} />
   </svg>
 );
+
+export const OfflineFavicon: React.FC<React.SVGProps<SVGSVGElement>> = (
+  props,
+) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={props.width ?? 16}
+    height={props.height ?? 16}
+    viewBox="0 0 16 16"
+    {...props}
+  >
+    {/* Background rectangle */}
+    <rect width="16" height="16" rx="2" ry="2" fill="#64748b" />
+    {/* Icon path */}
+    <path
+      d="M8 4a3 3 0 00-3 3v1H4v5h8V8h-1V7a3 3 0 00-3-3zm0 1a2 2 0 012 2v1H6V7a2 2 0 012-2z"
+      fill="#fff"
+    />
+  </svg>
+);
