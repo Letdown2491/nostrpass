@@ -230,18 +230,29 @@ export default function NewLoginModal({
 
   const handleQrScan = (data: string) => {
     if (!data) return;
-    if (data.startsWith("otpauth://")) {
+    let secret = "";
+    const trimmed = data.trim();
+
+    if (trimmed.startsWith("otpauth://")) {
       try {
-        const url = new URL(data);
-        const secret = url.searchParams.get("secret");
-        if (secret) {
-          setTotpSecret(secret);
-          setShowScanner(false);
-        }
+        const url = new URL(trimmed);
+        secret = url.searchParams.get("secret") || "";
       } catch (e) {
         console.error("Invalid otpauth url", e);
       }
+    } else {
+      secret = trimmed;
     }
+    if (!secret) return;
+
+    const normalized = secret.replace(/[^A-Z2-7]/gi, "").toUpperCase();
+
+    navigator.clipboard
+      .writeText(normalized)
+      .catch((e) => console.error("Failed to copy TOTP secret", e));
+
+    setTotpSecret(normalized);
+    setShowScanner(false);
   };
 
   return (
