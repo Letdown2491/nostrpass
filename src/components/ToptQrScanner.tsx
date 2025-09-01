@@ -38,24 +38,24 @@ export default function TotpQrScanner({
         if ("BarcodeDetector" in window) {
           // @ts-ignore
           detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+          if (!active) return;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            try {
+              await videoRef.current.play();
+            } catch (err: any) {
+              if (err?.name !== "AbortError") throw err;
+              return;
+            }
+          }
+
+          if (!active) return;
+          requestAnimationFrame(scan);
         } else {
           reader = new BrowserMultiFormatReader();
-        }
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-        if (active) {
-          try {
-            await videoRef.current.play();
-          } catch (err: any) {
-            if (err?.name !== "AbortError") throw err;
-            return;
-          }
-        }
-        if (!active) return;
-        if (detector) {
-          requestAnimationFrame(scan);
-        } else if (reader) {
           controls = await reader.decodeFromVideoDevice(
             undefined,
             videoRef.current,
