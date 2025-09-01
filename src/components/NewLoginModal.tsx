@@ -152,17 +152,6 @@ export default function NewLoginModal({
     setAddingCategory(false);
   };
 
-  const handleDelete = async (cat: string) => {
-    if (
-      !confirm(
-        "All logins with this category will be marked 'Uncategorized'. I understand?",
-      )
-    )
-      return;
-    await onDeleteCategory(cat);
-    if (category === cat) setCategory("Uncategorized");
-  };
-
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
