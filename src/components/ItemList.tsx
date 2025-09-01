@@ -8,7 +8,14 @@ import {
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
 import type { Settings } from "../state/settings";
-import { OfflineFavicon } from "./Icons";
+import {
+  OfflineFavicon,
+  EditIcon,
+  DeleteIcon,
+  RestoreIcon,
+  SpinnerIcon,
+} from "./Icons";
+import { Edit } from "lucide-react";
 
 const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 type PublishResult = { successes: string[]; failures: Record<string, string> };
@@ -482,31 +489,51 @@ export default function ItemList({
                       <div className="flex items-center gap-2 justify-end">
                         {!it.deleted && (
                           <button
-                            className="px-2 py-1 rounded border border-slate-600 hover:bg-slate-600/10 disabled:opacity-50"
+                            className="px-2 py-1 rounded border border-slate-600 hover:bg-slate-600/50 disabled:opacity-50"
                             onClick={() => setEditItem(it)}
                             disabled={isBusy}
                             title="Edit"
+                            aria-label="Edit item"
                           >
-                            Edit
+                            <EditIcon size={20} />
                           </button>
                         )}
                         {!it.deleted ? (
                           <button
-                            className="px-2 py-1 rounded border border-rose-400 text-rose-400 hover:bg-rose-600/10 disabled:opacity-50"
+                            className="px-2 py-1 rounded border border-rose-400 text-rose-400 hover:bg-rose-600/50 disabled:opacity-50"
                             onClick={() => deleteItem(it)}
                             disabled={isBusy}
                             title="Delete"
+                            aria-label="Delete item"
+                            aria-busy={isBusy}
                           >
-                            {isBusy ? "Deleting…" : "Delete"}
+                            {/* The trash‑can icon – always visible */}
+                            {!isBusy && <DeleteIcon size={20} />}
+
+                            {/* Either a spinner (while busy) or the word “Delete” */}
+                            {isBusy ? (
+                              <SpinnerIcon size={20} className="animate-spin" />
+                            ) : (
+                              ""
+                            )}
                           </button>
                         ) : (
                           <button
-                            className="px-2 py-1 rounded border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 disabled:opacity-50"
+                            className="px-2 py-1 rounded border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40 disabled:opacity-50"
                             onClick={() => restoreItem(it)}
                             disabled={isBusy}
                             title="Restore"
+                            aria-label="Restore item"
                           >
-                            {isBusy ? "Restoring…" : "Restore"}
+                            {/* The trash‑can icon – always visible */}
+                            {!isBusy && <RestoreIcon size={20} />}
+
+                            {/* Either a spinner (while busy) or the word “Delete” */}
+                            {isBusy ? (
+                              <SpinnerIcon size={20} className="animate-spin" />
+                            ) : (
+                              ""
+                            )}
                           </button>
                         )}
                       </div>
