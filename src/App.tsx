@@ -10,6 +10,8 @@ import { RelayPool } from "./lib/relays";
 import type { NostrEvent } from "./lib/types";
 import { toNpub } from "./lib/npub";
 import { parseProfileEvent, type Profile } from "./lib/profile";
+import { db } from "./lib/db";
+import { decryptItemContentUsingSession } from "./state/vault";
 import {
   DEFAULT_SETTINGS,
   SETTINGS_D,
@@ -37,6 +39,46 @@ export default function App() {
   const poolRef = React.useRef<RelayPool | null>(null);
   const npub = React.useMemo(() => (pubkey ? toNpub(pubkey) : ""), [pubkey]);
 
+  const storeEvent = React.useCallback(async (ev: NostrEvent) => {
+    const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+    await db.events.put({
+      id: ev.id,
+      d,
+      created_at: ev.created_at,
+      content: ev.content,
+      raw: ev,
+    });
+    try {
+      const body: any = await decryptItemContentUsingSession(ev.content);
+      await db.index.put({
+        d,
+        version: body.version ?? 0,
+        updatedAt: body.updatedAt ?? ev.created_at,
+        type: body.type ?? "",
+        title: body.title,
+      });
+    } catch {
+      await db.index.put({
+        d,
+        version: 0,
+        updatedAt: ev.created_at,
+        type: "",
+        title: undefined,
+      });
+    }
+  }, []);
+
+  const clearDb = React.useCallback(async () => {
+    await db.events.clear();
+    await db.index.clear();
+  }, []);
+
+  const handleUnlocked = React.useCallback(async () => {
+    const cached = await db.events.orderBy("created_at").toArray();
+    setEvents(cached.map((r) => r.raw as NostrEvent));
+    setUnlocked(true);
+  }, []);
+
   const startSub = React.useCallback((pk: string) => {
     const pool = new RelayPool(DEFAULT_RELAYS);
     pool.connect();
@@ -46,8 +88,9 @@ export default function App() {
     const dataFilters = [{ authors: [pk], kinds: [30078], limit: 2000 }];
     pool.subscribe(
       dataFilters,
-      (ev) => {
+      async (ev) => {
         const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+        await storeEvent(ev);
         // Keep newest per d
         setEvents((prev) => {
           const idx = prev.findIndex(
@@ -105,13 +148,33 @@ export default function App() {
   }, []);
 
   React.useEffect(() => {
-    if (pubkey && !poolRef.current) startSub(pubkey);
-  }, [pubkey, startSub]);
+    if (pubkey && unlocked && !poolRef.current) startSub(pubkey);
+  }, [pubkey, unlocked, startSub]);
+
+  const prevUnlocked = React.useRef(unlocked);
+  React.useEffect(() => {
+    if (prevUnlocked.current && !unlocked) {
+      clearDb();
+      setEvents([]);
+      poolRef.current = null;
+    }
+    prevUnlocked.current = unlocked;
+  }, [unlocked, clearDb]);
+
+  const prevPubkey = React.useRef<string | null>(pubkey);
+  React.useEffect(() => {
+    if (prevPubkey.current && !pubkey) {
+      clearDb();
+      setEvents([]);
+      poolRef.current = null;
+    }
+    prevPubkey.current = pubkey;
+  }, [pubkey, clearDb]);
 
   const publish = async (
     ev: NostrEvent,
   ): Promise<{ successes: string[]; failures: Record<string, string> }> => {
-    if (!poolRef.current && pubkey) startSub(pubkey);
+    if (!poolRef.current && pubkey && unlocked) startSub(pubkey);
 
     // Optimistic replace by d
     const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
@@ -126,6 +189,7 @@ export default function App() {
       }
       return [...prev, ev];
     });
+    await storeEvent(ev);
 
     try {
       const res = await poolRef.current?.publish(ev);
@@ -156,7 +220,7 @@ export default function App() {
   if (!unlocked) {
     return (
       <div className="max-w-3xl mx-auto mt-8 space-y-6">
-        <Unlock onUnlocked={() => setUnlocked(true)} />
+        <Unlock onUnlocked={handleUnlocked} />
         <div className="max-w-md mx-auto text-center text-xs text-slate-500">
           After unlocking, your vault will sync from the configured relays and
           decrypt locally.
