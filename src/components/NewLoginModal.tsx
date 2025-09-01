@@ -41,6 +41,7 @@ export default function NewLoginModal({
   const [showPassword, setShowPassword] = React.useState(false);
   const [showTotpSecret, setShowTotpSecret] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
+  const lastSecretRef = React.useRef<string | null>(null);
   const scannedRef = React.useRef(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [status, setStatus] = React.useState<{
@@ -234,12 +235,10 @@ export default function NewLoginModal({
   };
 
   const handleQrScan = (data: string) => {
-    if (!data || scannedRef.current) return;
-    scannedRef.current = true;
+    if (!data) return;
 
     let secret = "";
     const trimmed = data.trim();
-
     if (trimmed.startsWith("otpauth://")) {
       try {
         const url = new URL(trimmed);
@@ -253,11 +252,12 @@ export default function NewLoginModal({
     if (!secret) return;
 
     const normalized = secret.replace(/[^A-Z2-7]/gi, "").toUpperCase();
+    if (normalized === lastSecretRef.current) return; // ignore repeat
 
+    lastSecretRef.current = normalized;
     navigator.clipboard
       .writeText(normalized)
       .catch((e) => console.error("Failed to copy TOTP secret", e));
-
     setTotpSecret(normalized);
     setShowScanner(false);
   };
