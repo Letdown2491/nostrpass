@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 
 export default function TotpQrScanner({
   onScan,
@@ -15,6 +15,7 @@ export default function TotpQrScanner({
     let stream: MediaStream;
     let detector: any;
     let reader: BrowserMultiFormatReader | null = null;
+    let controls: IScannerControls | null = null;
     let active = true;
 
     const scan = async () => {
@@ -25,12 +26,6 @@ export default function TotpQrScanner({
           const codes = await detector.detect(videoRef.current);
           if (codes.length > 0) {
             onScan(codes[0].rawValue);
-            return;
-          }
-        } else if (reader) {
-          const result = await reader.decodeFromVideoElement(videoRef.current);
-          if (result) {
-            onScan(result.getText());
             return;
           }
         }
@@ -49,14 +44,31 @@ export default function TotpQrScanner({
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
         });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+        if (active) {
+          try {
+            await videoRef.current.play();
+          } catch (err: any) {
+            if (err?.name !== "AbortError") throw err;
+            return;
+          }
+        }
+        if (!active) return;
+        if (detector) {
           requestAnimationFrame(scan);
+        } else if (reader) {
+          controls = await reader.decodeFromVideoDevice(
+            undefined,
+            videoRef.current,
+            (result: any) => {
+              if (result) onScan(result.getText());
+            },
+          );
         }
       } catch (err: any) {
-        console.error("camera error", err);
-        setError(err?.message || "Camera error");
+        if (err?.name !== "AbortError") {
+          console.error("camera error", err);
+          setError(err?.message || "Camera error");
+        }
       }
     };
 
@@ -64,7 +76,7 @@ export default function TotpQrScanner({
 
     return () => {
       active = false;
-      reader?.reset();
+      controls?.stop();
       if (stream) stream.getTracks().forEach((t) => t.stop());
     };
   }, [onScan]);
