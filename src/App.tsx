@@ -4,7 +4,7 @@ import Unlock from "./components/Unlock";
 import ItemList from "./components/ItemList";
 import NewLoginModal from "./components/NewLoginModal";
 import ProfileBadge from "./components/ProfileBadge";
-import { LogoIcon, OfflineFavicon } from "./components/Icons";
+import { LogoIcon } from "./components/Icons";
 import SettingsModal from "./components/SettingsModal";
 import { RelayPool } from "./lib/relays";
 import type { NostrEvent } from "./lib/types";

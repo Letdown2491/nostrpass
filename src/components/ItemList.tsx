@@ -8,7 +8,7 @@ import {
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
 import type { Settings } from "../state/settings";
-import { LogoIcon, OfflineFavicon } from "./Icons";
+import { OfflineFavicon } from "./Icons";
 
 const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 type PublishResult = { successes: string[]; failures: Record<string, string> };
@@ -275,7 +275,7 @@ export default function ItemList({
     }
   };
 
-  const isOffline = !navigator.onLine;
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
   const visible = sorted;
 
   // helper: conditional truncation classes + tooltip
@@ -375,7 +375,7 @@ export default function ItemList({
                   <>
                     <td className="py-2 px-2">
                       <span className="inline-flex items-center gap-2">
-                        {showFavicon ? (
+                        {showFavicon && !isOffline ? (
                           <img
                             key={`${host}-${faviconRetry}`}
                             src={faviconUrlForHost(host!, settings)}
@@ -395,7 +395,7 @@ export default function ItemList({
                             }}
                           />
                         ) : isOffline && host ? (
-                          <OfflineFavicon className="w-5 h-5 rounded-sm bg-slate-800/50" />
+                          <OfflineFavicon />
                         ) : (
                           <span
                             className="w-5 h-5 rounded-sm bg-slate-800/50 inline-block"
