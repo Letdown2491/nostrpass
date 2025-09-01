@@ -10,8 +10,7 @@ export type Settings = {
   // existing
   showDeleted: boolean;
   showFavicons: boolean;
-
-  // new
+  clipboardClearSec: number | null; // clear clipboard
   truncateFields: boolean; // ellipsis + tooltip for long Title/Site
   defaultSort: { key: TableSortKey; dir: TableSortDir };
   favicon: {
@@ -25,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showDeleted: false,
   showFavicons: true,
   truncateFields: true,
+  clipboardClearSec: 30,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
   categories: [

@@ -268,6 +268,13 @@ export default function ItemList({
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
+      if (settings.clipboardClearSec) {
+        setTimeout(() => {
+          navigator.clipboard.writeText("").catch((e) => {
+            console.error("Failed to clear clipboard", e);
+          });
+        }, settings.clipboardClearSec * 1000);
+      }
     } catch (e) {
       console.error("Failed to copy text", e);
     }
@@ -277,6 +284,13 @@ export default function ItemList({
     if (!pw) return;
     try {
       await navigator.clipboard.writeText(pw);
+      if (settings.clipboardClearSec) {
+        setTimeout(() => {
+          navigator.clipboard.writeText("").catch((e) => {
+            console.error("Failed to clear clipboard", e);
+          });
+        }, settings.clipboardClearSec * 1000);
+      }
     } catch (e) {
       console.error("Failed to copy password", e);
     }
@@ -373,6 +387,7 @@ export default function ItemList({
               const code = otpMap[key] || "—";
 
               const host = hostnameFromSite(it.site);
+              const displayHost = host || it.site;
               const showFavicon =
                 settings.showFavicons && !!host && !badFavicons[host];
 
@@ -428,17 +443,17 @@ export default function ItemList({
                         >
                           <span
                             className={trunc(settings.truncateFields)}
-                            title={String(it.site || "")}
+                            title={String(displayHost || "")}
                           >
-                            {it.site}
+                            {displayHost}
                           </span>
                         </a>
                       ) : (
                         <span
                           className={trunc(settings.truncateFields)}
-                          title={String(it.site || "")}
+                          title={String(displayHost || "")}
                         >
-                          {it.site || "—"}
+                          {displayHost || "—"}
                         </span>
                       )}
                     </td>

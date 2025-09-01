@@ -1,5 +1,10 @@
 import React from "react";
-import type { Settings, TableSortKey, TableSortDir } from "../state/settings";
+import type {
+  Settings,
+  TableSortKey,
+  TableSortDir,
+  DEFAULT_SETTINGS,
+} from "../state/settings";
 
 const SORT_KEYS: TableSortKey[] = ["title", "site", "username", "updatedAt"];
 const SORT_DIRS: TableSortDir[] = ["asc", "desc"];
@@ -189,6 +194,43 @@ export default function SettingsModal({
                   ))}
                 </select>
               </label>
+            </div>
+
+            {/* Clipboard clear */}
+            <div className="text-sm space-y-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.clipboardClearSec !== null}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      clipboardClearSec: e.target.checked
+                        ? (s.clipboardClearSec ??
+                          DEFAULT_SETTINGS.clipboardClearSec)
+                        : null,
+                    }))
+                  }
+                />
+                Clear clipboard after copy
+              </label>
+              {form.clipboardClearSec !== null && (
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full sm:max-w-xs"
+                  value={form.clipboardClearSec}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      clipboardClearSec: Number(e.target.value),
+                    }))
+                  }
+                />
+              )}
+              <p className="text-xs text-slate-500">
+                Automatically clear clipboard after the given number of seconds.
+              </p>
             </div>
 
             {/* Show deleted */}
