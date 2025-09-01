@@ -86,7 +86,7 @@ export default function NewLoginModal({
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
-    setStatus({ ok: null, text: "Publishing…" });
+    setStatus({ ok: null, text: "" });
 
     const id = uuidv4();
     const d = `com.you.pm:item:${id}`;
@@ -114,21 +114,30 @@ export default function NewLoginModal({
       const ev = await buildItemEvent(d, item, pubkey);
       const res = await onPublish(ev);
       const okCount = res?.successes?.length || 0;
+      const failCount = Object.keys(res?.failures || {}).length;
       if (okCount > 0) {
         setStatus({ ok: true, text: "Saved" });
         reset();
         onClose();
+      } else if (failCount === 0 || !navigator.onLine) {
+        // Treat missing confirmations or offline state as a pending local save
+        setStatus({ ok: true, text: "Saved locally (pending)" });
+        reset();
+        onClose();
       } else {
-        const failCount = Object.keys(res?.failures || {}).length;
         setStatus({
           ok: false,
-          text: failCount
-            ? `No relay accepted write (${failCount} failed)`
-            : "No confirmation received",
+          text: `No relay accepted write (${failCount} failed)`,
         });
       }
     } catch (err: any) {
-      setStatus({ ok: false, text: err?.message || "Failed to publish" });
+      if (!navigator.onLine) {
+        setStatus({ ok: true, text: "Saved locally (pending)" });
+        reset();
+        onClose();
+      } else {
+        setStatus({ ok: false, text: err?.message || "Failed to publish" });
+      }
     } finally {
       setSubmitting(false);
     }

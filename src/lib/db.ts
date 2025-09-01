@@ -1,32 +1,37 @@
-import Dexie, { Table } from 'dexie'
+import Dexie, { Table } from "dexie";
 
 export interface StoredEvent {
-  id: string
-  d: string
-  created_at: number
-  content: string
-  raw: any
+  id: string;
+  d: string;
+  created_at: number;
+  content: string;
+  raw: any;
+  pending?: 1 | 0;
 }
 
 export interface ItemIndex {
-  d: string
-  version: number
-  updatedAt: number
-  type: string
-  title?: string
+  d: string;
+  version: number;
+  updatedAt: number;
+  type: string;
+  title?: string;
 }
 
 export class VaultDB extends Dexie {
-  events!: Table<StoredEvent, string> // id
-  index!: Table<ItemIndex, string>    // d
+  events!: Table<StoredEvent, string>; // id
+  index!: Table<ItemIndex, string>; // d
 
   constructor() {
-    super('nostr_pm_db')
+    super("nostr_pm_db");
     this.version(1).stores({
-      events: 'id, d, created_at',
-      index: 'd, updatedAt, version'
-    })
+      events: "id, d, created_at",
+      index: "d, updatedAt, version",
+    });
+    this.version(2).stores({
+      events: "id, d, created_at, pending",
+      index: "d, updatedAt, version",
+    });
   }
 }
 
-export const db = new VaultDB()
+export const db = new VaultDB();

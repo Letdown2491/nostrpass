@@ -102,6 +102,17 @@ export default function ItemList({
     {},
   );
 
+  // trigger favicon reload when network comes back online
+  const [faviconRetry, setFaviconRetry] = React.useState(0);
+  React.useEffect(() => {
+    const onOnline = () => {
+      setBadFavicons({});
+      setFaviconRetry((n) => n + 1);
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, []);
+
   React.useEffect(() => {
     let active = true;
     (async () => {
@@ -364,6 +375,7 @@ export default function ItemList({
                       <span className="inline-flex items-center gap-2">
                         {showFavicon ? (
                           <img
+                            key={`${host}-${faviconRetry}`}
                             src={faviconUrlForHost(host!, settings)}
                             alt=""
                             aria-hidden="true"
@@ -371,9 +383,14 @@ export default function ItemList({
                             loading="lazy"
                             decoding="async"
                             referrerPolicy="no-referrer"
-                            onError={() =>
-                              setBadFavicons((m) => ({ ...m, [host!]: true }))
-                            }
+                            onError={() => {
+                              if (navigator.onLine) {
+                                setBadFavicons((m) => ({
+                                  ...m,
+                                  [host!]: true,
+                                }));
+                              }
+                            }}
                           />
                         ) : (
                           <span

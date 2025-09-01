@@ -39,117 +39,159 @@ export default function App() {
   const poolRef = React.useRef<RelayPool | null>(null);
   const npub = React.useMemo(() => (pubkey ? toNpub(pubkey) : ""), [pubkey]);
 
-  const storeEvent = React.useCallback(async (ev: NostrEvent) => {
-    const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-    await db.events.put({
-      id: ev.id,
-      d,
-      created_at: ev.created_at,
-      content: ev.content,
-      raw: ev,
-    });
-    try {
-      const body: any = await decryptItemContentUsingSession(ev.content);
-      await db.index.put({
+  const storeEvent = React.useCallback(
+    async (ev: NostrEvent, pending: 1 | 0) => {
+      const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+      await db.events.put({
+        id: ev.id,
         d,
-        version: body.version ?? 0,
-        updatedAt: body.updatedAt ?? ev.created_at,
-        type: body.type ?? "",
-        title: body.title,
+        created_at: ev.created_at,
+        content: ev.content,
+        raw: ev,
+        pending,
       });
-    } catch {
-      await db.index.put({
-        d,
-        version: 0,
-        updatedAt: ev.created_at,
-        type: "",
-        title: undefined,
-      });
-    }
-  }, []);
+      try {
+        const body: any = await decryptItemContentUsingSession(ev.content);
+        await db.index.put({
+          d,
+          version: body.version ?? 0,
+          updatedAt: body.updatedAt ?? ev.created_at,
+          type: body.type ?? "",
+          title: body.title,
+        });
+      } catch {
+        await db.index.put({
+          d,
+          version: 0,
+          updatedAt: ev.created_at,
+          type: "",
+          title: undefined,
+        });
+      }
+    },
+    [],
+  );
 
   const clearDb = React.useCallback(async () => {
     await db.events.clear();
     await db.index.clear();
   }, []);
 
+  const publishPending = React.useCallback(async () => {
+    if (!poolRef.current) return;
+    const pending = await db.events.where("pending").equals(1).toArray();
+    for (const p of pending) {
+      try {
+        const res = await poolRef.current.publish(p.raw as NostrEvent);
+        if (res?.successes?.length) {
+          await db.events.update(p.id, { pending: 0 });
+        }
+      } catch {
+        // keep pending
+      }
+    }
+  }, []);
+
   const handleUnlocked = React.useCallback(async () => {
     const cached = await db.events.orderBy("created_at").toArray();
-    setEvents(cached.map((r) => r.raw as NostrEvent));
+    const latest = new Map<string, (typeof cached)[number]>();
+    cached.forEach((r) => {
+      const existing = latest.get(r.d);
+      if (!existing || r.created_at > existing.created_at) latest.set(r.d, r);
+    });
+    setEvents(Array.from(latest.values()).map((r) => r.raw as NostrEvent));
     setUnlocked(true);
   }, []);
 
-  const startSub = React.useCallback((pk: string) => {
-    const pool = new RelayPool(DEFAULT_RELAYS);
-    pool.connect();
-    poolRef.current = pool;
+  const startSub = React.useCallback(
+    (pk: string) => {
+      const pool = new RelayPool(DEFAULT_RELAYS);
+      pool.connect();
+      poolRef.current = pool;
 
-    // Subscribe to parameterized replaceable app data (kind 30078) - items (broad, we filter in ItemList)
-    const dataFilters = [{ authors: [pk], kinds: [30078], limit: 2000 }];
-    pool.subscribe(
-      dataFilters,
-      async (ev) => {
-        const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-        await storeEvent(ev);
-        // Keep newest per d
-        setEvents((prev) => {
-          const idx = prev.findIndex(
-            (p) => (p.tags.find((t) => t[0] === "d")?.[1] ?? "") === d,
-          );
-          if (idx >= 0) {
-            const existing = prev[idx];
-            if (ev.created_at > existing.created_at) {
-              const copy = prev.slice();
-              copy[idx] = ev;
-              return copy;
+      // Subscribe to parameterized replaceable app data (kind 30078) - items (broad, we filter in ItemList)
+      const dataFilters = [{ authors: [pk], kinds: [30078], limit: 2000 }];
+      pool.subscribe(
+        dataFilters,
+        async (ev) => {
+          const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+          await storeEvent(ev, 0);
+          // Keep newest per d
+          setEvents((prev) => {
+            const idx = prev.findIndex(
+              (p) => (p.tags.find((t) => t[0] === "d")?.[1] ?? "") === d,
+            );
+            if (idx >= 0) {
+              const existing = prev[idx];
+              if (ev.created_at > existing.created_at) {
+                const copy = prev.slice();
+                copy[idx] = ev;
+                return copy;
+              }
+              return prev;
             }
-            return prev;
+            return [...prev, ev];
+          });
+        },
+        () => {
+          // EOSE for data
+        },
+      );
+
+      // Subscribe to profile metadata (kind 0). Replaceable; pick latest created_at.
+      const profileFilters = [{ authors: [pk], kinds: [0], limit: 1 }];
+      pool.subscribe(
+        profileFilters,
+        (ev) => {
+          const p = parseProfileEvent(ev);
+          if (!p) return;
+          setProfile((cur) => {
+            if (!cur) return p;
+            if ((p.created_at ?? 0) > (cur.created_at ?? 0)) return p;
+            return cur;
+          });
+        },
+        () => {},
+      );
+
+      // Subscribe to SETTINGS (a specific parameterized replaceable)
+      const settingsFilters = [
+        { authors: [pk], kinds: [30078], "#d": [SETTINGS_D], limit: 1 },
+      ];
+      pool.subscribe(
+        settingsFilters,
+        (ev) => {
+          const parsed = parseSettingsEvent(ev);
+          if (parsed) {
+            setSettings((cur) => ({ ...cur, ...parsed }));
           }
-          return [...prev, ev];
-        });
-      },
-      () => {
-        // EOSE for data
-      },
-    );
+        },
+        () => {
+          // EOSE for settings (no-op)
+        },
+      );
 
-    // Subscribe to profile metadata (kind 0). Replaceable; pick latest created_at.
-    const profileFilters = [{ authors: [pk], kinds: [0], limit: 1 }];
-    pool.subscribe(
-      profileFilters,
-      (ev) => {
-        const p = parseProfileEvent(ev);
-        if (!p) return;
-        setProfile((cur) => {
-          if (!cur) return p;
-          if ((p.created_at ?? 0) > (cur.created_at ?? 0)) return p;
-          return cur;
-        });
-      },
-      () => {},
-    );
-
-    // Subscribe to SETTINGS (a specific parameterized replaceable)
-    const settingsFilters = [
-      { authors: [pk], kinds: [30078], "#d": [SETTINGS_D], limit: 1 },
-    ];
-    pool.subscribe(
-      settingsFilters,
-      (ev) => {
-        const parsed = parseSettingsEvent(ev);
-        if (parsed) {
-          setSettings((cur) => ({ ...cur, ...parsed }));
-        }
-      },
-      () => {
-        // EOSE for settings (no-op)
-      },
-    );
-  }, []);
+      publishPending();
+    },
+    [storeEvent, publishPending],
+  );
 
   React.useEffect(() => {
     if (pubkey && unlocked && !poolRef.current) startSub(pubkey);
   }, [pubkey, unlocked, startSub]);
+
+  React.useEffect(() => {
+    const onOnline = () => {
+      if (poolRef.current) {
+        poolRef.current.connect();
+      } else if (pubkey && unlocked) {
+        startSub(pubkey);
+      }
+      publishPending();
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [pubkey, unlocked, startSub, publishPending]);
 
   const prevUnlocked = React.useRef(unlocked);
   React.useEffect(() => {
@@ -189,10 +231,13 @@ export default function App() {
       }
       return [...prev, ev];
     });
-    await storeEvent(ev);
+    await storeEvent(ev, 1);
 
     try {
       const res = await poolRef.current?.publish(ev);
+      if (res?.successes?.length) {
+        await db.events.update(ev.id, { pending: 0 });
+      }
       return res ?? { successes: [], failures: {} };
     } catch (e) {
       return { successes: [], failures: { _error: String(e) } };
