@@ -3,6 +3,7 @@ import type { NostrEvent } from "../lib/types";
 import { buildItemEvent } from "../state/vault";
 import type { Settings } from "../state/settings";
 import { generatePassword } from "../lib/crypto";
+import { passwordStrength } from "check-password-strength";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 
@@ -30,6 +31,7 @@ export default function EditLoginModal({
   const [password, setPassword] = React.useState("");
   const [totpSecret, setTotpSecret] = React.useState(""); // 2FA secret (Base32)
   const [notes, setNotes] = React.useState("");
+  const [passwordScore, setPasswordScore] = React.useState(0);
   const [newCat, setNewCat] = React.useState("");
   const [addingCategory, setAddingCategory] = React.useState(false);
   const [savingCategory, setSavingCategory] = React.useState(false);
@@ -40,6 +42,31 @@ export default function EditLoginModal({
     ok: boolean | null;
     text: string;
   }>({ ok: null, text: "" });
+
+  const strengthLabels = ["Too weak", "Weak", "Medium", "Strong"];
+  const strengthColors = [
+    "bg-rose-500",
+    "bg-orange-500",
+    "bg-yellow-500",
+    "bg-emerald-500",
+  ];
+  const strengthText = [
+    "text-rose-400",
+    "text-orange-400",
+    "text-yellow-400",
+    "text-emerald-400",
+  ];
+
+  React.useEffect(() => {
+    if (!password) {
+      setPasswordScore(0);
+      return;
+    }
+    const { id } = passwordStrength(password);
+    setPasswordScore(id);
+  }, [password]);
+
+  const isWeak = password.length > 0 && passwordScore < 2;
 
   React.useEffect(() => {
     if (!open || !item) return;
@@ -311,6 +338,19 @@ export default function EditLoginModal({
                 Generate
               </button>
             </div>
+            {password && (
+              <div className="mt-1">
+                <div className="w-full h-1 bg-slate-700 rounded">
+                  <div
+                    className={`h-full rounded ${strengthColors[passwordScore]}`}
+                    style={{ width: `${((passwordScore + 1) / 4) * 100}%` }}
+                  />
+                </div>
+                <div className={`text-xs mt-1 ${strengthText[passwordScore]}`}>
+                  {strengthLabels[passwordScore]}
+                </div>
+              </div>
+            )}
           </label>
 
           {/* 2FA Secret Key with Show/Hide */}

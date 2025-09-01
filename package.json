@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@noble/hashes": "^1.4.0",
+    "check-password-strength": "^3.0.0",
     "dexie": "^4.0.8",
     "hash-wasm": "^4.11.0",
     "libsodium-wrappers": "^0.7.13",
