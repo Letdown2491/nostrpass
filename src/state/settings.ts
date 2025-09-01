@@ -11,6 +11,7 @@ export type Settings = {
   showDeleted: boolean;
   showFavicons: boolean;
   clipboardClearSec: number | null; // clear clipboard
+  autolockSec: number | null; // lock vault after inactivity
   truncateFields: boolean; // ellipsis + tooltip for long Title/Site
   defaultSort: { key: TableSortKey; dir: TableSortDir };
   favicon: {
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showFavicons: true,
   truncateFields: true,
   clipboardClearSec: 30,
+  autolockSec: 300,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
   categories: [

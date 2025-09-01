@@ -11,7 +11,7 @@ import type { NostrEvent } from "./lib/types";
 import { toNpub } from "./lib/npub";
 import { parseProfileEvent, type Profile } from "./lib/profile";
 import { db } from "./lib/db";
-import { decryptItemContentUsingSession } from "./state/vault";
+import { decryptItemContentUsingSession, lockVault } from "./state/vault";
 import {
   DEFAULT_SETTINGS,
   SETTINGS_D,
@@ -37,6 +37,7 @@ export default function App() {
   const [showSettings, setShowSettings] = React.useState(false);
 
   const poolRef = React.useRef<RelayPool | null>(null);
+  const idleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const npub = React.useMemo(() => (pubkey ? toNpub(pubkey) : ""), [pubkey]);
 
   const storeEvent = React.useCallback(
@@ -257,6 +258,24 @@ export default function App() {
     const nextCategories = settings.categories.filter((c) => c !== cat);
     await saveSettings({ ...settings, categories: nextCategories });
   };
+
+  React.useEffect(() => {
+    if (!unlocked || settings.autolockSec === null) return;
+    const reset = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        lockVault();
+        setUnlocked(false);
+      }, settings.autolockSec! * 1000);
+    };
+    const events = ["mousemove", "keydown"] as const;
+    events.forEach((ev) => window.addEventListener(ev, reset));
+    reset();
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, reset));
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [unlocked, settings.autolockSec]);
 
   if (!pubkey) {
     return <Login onConnected={(pk) => setPubkey(pk)} />;

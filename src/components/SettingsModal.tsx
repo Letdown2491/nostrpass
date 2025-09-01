@@ -1,9 +1,9 @@
 import React from "react";
-import type {
-  Settings,
-  TableSortKey,
-  TableSortDir,
+import {
   DEFAULT_SETTINGS,
+  type Settings,
+  type TableSortKey,
+  type TableSortDir,
 } from "../state/settings";
 
 const SORT_KEYS: TableSortKey[] = ["title", "site", "username", "updatedAt"];
@@ -212,7 +212,7 @@ export default function SettingsModal({
                     }))
                   }
                 />
-                Clear clipboard after copy
+                Clear clipboard after X seconds
               </label>
               {form.clipboardClearSec !== null && (
                 <input
@@ -229,7 +229,44 @@ export default function SettingsModal({
                 />
               )}
               <p className="text-xs text-slate-500">
-                Automatically clear clipboard after the given number of seconds.
+                Automatically clear clipboard after X seconds
+              </p>
+            </div>
+
+            {/* Auto-lock */}
+            <div className="text-sm space-y-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.autolockSec !== null}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      autolockSec: e.target.checked
+                        ? (s.autolockSec ?? DEFAULT_SETTINGS.autolockSec)
+                        : null,
+                    }))
+                  }
+                />
+                Lock after X seconds of inactivity
+              </label>
+              {form.autolockSec !== null && (
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full sm:max-w-xs"
+                  value={form.autolockSec}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      autolockSec: Number(e.target.value),
+                    }))
+                  }
+                />
+              )}
+              <p className="text-xs text-slate-500">
+                Automatically lock the vault after the given number of idle
+                seconds.
               </p>
             </div>
 

@@ -43,6 +43,12 @@ export async function unlockVault(passphrase: string): Promise<void> {
   await initSodium();
 }
 
+export function lockVault(): void {
+  session.passphrase = null;
+  session.unlocked = false;
+  session.vaultKeyReady = false;
+}
+
 export function parseEnvelope(content: string): Envelope | null {
   try {
     return JSON.parse(content);
