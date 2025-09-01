@@ -41,8 +41,8 @@ export default function NewLoginModal({
   const [showPassword, setShowPassword] = React.useState(false);
   const [showTotpSecret, setShowTotpSecret] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
+  const [scannedSecret, setScannedSecret] = React.useState("");
   const lastSecretRef = React.useRef<string | null>(null);
-  const scannedRef = React.useRef(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [status, setStatus] = React.useState<{
     ok: boolean | null;
@@ -97,10 +97,13 @@ export default function NewLoginModal({
     setCategory(defaultCategory);
     setNewCat("");
     setAddingCategory(false);
+    setScannedSecret("");
   }, [open, defaultCategory]);
 
   React.useEffect(() => {
-    if (showScanner) scannedRef.current = false;
+    if (showScanner) {
+      lastSecretRef.current = null;
+    }
   }, [showScanner]);
 
   if (!open) return null;
@@ -119,6 +122,7 @@ export default function NewLoginModal({
     setShowTotpSecret(false);
     setShowScanner(false);
     setStatus({ ok: null, text: "" });
+    setScannedSecret("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -258,8 +262,21 @@ export default function NewLoginModal({
     navigator.clipboard
       .writeText(normalized)
       .catch((e) => console.error("Failed to copy TOTP secret", e));
-    setTotpSecret(normalized);
+    setScannedSecret(normalized);
+    setShowTotpSecret(true);
     setShowScanner(false);
+  };
+
+  const copySecret = async () => {
+    const secret = scannedSecret || totpSecret;
+    if (!secret) return;
+    try {
+      await navigator.clipboard.writeText(secret);
+      alert("TOTP secret copied to clipboard");
+    } catch (e) {
+      console.error("Failed to copy TOTP secret", e);
+      alert("Failed to copy TOTP secret");
+    }
   };
 
   return (
@@ -446,6 +463,20 @@ export default function NewLoginModal({
                   {/* or simply put "Scan" as text if no icon */}
                 </button>
               </div>
+              {scannedSecret && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="font-mono break-all text-xs">
+                    {scannedSecret}
+                  </span>
+                  <button
+                    type="button"
+                    className="px-3 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+                    onClick={copySecret}
+                  >
+                    Copy Secret
+                  </button>
+                </div>
+              )}
             </label>
 
             <label className="text-sm block">
