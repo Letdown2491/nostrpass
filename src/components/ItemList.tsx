@@ -275,7 +275,6 @@ export default function ItemList({
     }
   };
 
-  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
   const visible = sorted;
 
   // helper: conditional truncation classes + tooltip
@@ -367,15 +366,15 @@ export default function ItemList({
               const code = otpMap[key] || "—";
 
               const host = hostnameFromSite(it.site);
-              const showFavicon =
-                settings.showFavicons && !!host && !badFavicons[host];
+              const wantsFavicon = settings.showFavicons && !!host;
+              const showFavicon = wantsFavicon && !badFavicons[host];
 
               return (
                 <tr key={key} className="border-b border-slate-800/60">
                   <>
                     <td className="py-2 px-2">
                       <span className="inline-flex items-center gap-2">
-                        {showFavicon && !isOffline ? (
+                        {showFavicon ? (
                           <img
                             key={`${host}-${faviconRetry}`}
                             src={faviconUrlForHost(host!, settings)}
@@ -385,16 +384,14 @@ export default function ItemList({
                             loading="lazy"
                             decoding="async"
                             referrerPolicy="no-referrer"
-                            onError={() => {
-                              if (navigator.onLine) {
-                                setBadFavicons((m) => ({
-                                  ...m,
-                                  [host!]: true,
-                                }));
-                              }
-                            }}
+                            onError={() =>
+                              setBadFavicons((m) => ({
+                                ...m,
+                                [host!]: true,
+                              }))
+                            }
                           />
-                        ) : isOffline && host ? (
+                        ) : wantsFavicon ? (
                           <OfflineFavicon />
                         ) : (
                           <span
