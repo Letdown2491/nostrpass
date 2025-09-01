@@ -4,11 +4,11 @@ import React from "react";
 export const LogoIcon = ({
   width = 64,
   height = 64,
-  className = "",
+  className = "align-middle",
   // optional overrides for the two main colors
-  bgColor = "#0A84FF",
-  lockColor = "#FFFFFF",
-  keyholeColor = "#0A84FF",
+  bgColor = "",
+  lockColor = "rgba(155, 89, 182,1.0)",
+  keyholeColor = "#FFFFFF",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -29,8 +29,8 @@ export const LogoIcon = ({
       fill={lockColor}
     />
     {/* Keyhole */}
-    <circle cx="32" cy="38" r="3" fill={keyholeColor} />
-    <rect x="31" y="41" width="2" height="6" fill={keyholeColor} />
+    <circle cx="32" cy="36" r="3" fill={keyholeColor} />
+    <rect x="31" y="39" width="2" height="6" fill={keyholeColor} />
   </svg>
 );
 

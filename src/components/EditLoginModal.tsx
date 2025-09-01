@@ -111,11 +111,14 @@ export default function EditLoginModal({
       const ev = await buildItemEvent(item.d, body, pubkey);
       const res = await onPublish(ev);
       const okCount = res?.successes?.length || 0;
+      const failCount = Object.keys(res?.failures || {}).length;
       if (okCount > 0) {
         setStatus({ ok: true, text: "Saved" });
         onClose();
+      } else if (failCount === 0 || !navigator.onLine) {
+        setStatus({ ok: true, text: "Saved locally (pending)" });
+        onClose();
       } else {
-        const failCount = Object.keys(res?.failures || {}).length;
         setStatus({
           ok: false,
           text: failCount
@@ -124,7 +127,12 @@ export default function EditLoginModal({
         });
       }
     } catch (err: any) {
-      setStatus({ ok: false, text: err?.message || "Failed to publish" });
+      if (!navigator.onLine) {
+        setStatus({ ok: true, text: "Saved locally (pending)" });
+        onClose();
+      } else {
+        setStatus({ ok: false, text: err?.message || "Failed to publish" });
+      }
     } finally {
       setSubmitting(false);
     }
