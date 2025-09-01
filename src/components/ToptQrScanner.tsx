@@ -10,14 +10,17 @@ export default function TotpQrScanner({
 }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [warning, setWarning] = React.useState<string | null>(null);
   const startRef = React.useRef<() => void>();
 
   React.useEffect(() => {
-    let stream: MediaStream;
+    let stream: MediaStream | null = null;
     let detector: any;
     let reader: BrowserMultiFormatReader | null = null;
     let controls: IScannerControls | null = null;
     let active = true;
+    const maxFrames = 300;
+    let frameCount = 0;
 
     const scan = async () => {
       if (!active || !videoRef.current) return;
@@ -29,12 +32,41 @@ export default function TotpQrScanner({
             onScan(codes[0].rawValue);
             return;
           }
+          frameCount++;
+          if (frameCount >= maxFrames) {
+            console.warn(
+              "BarcodeDetector timeout, falling back to BrowserMultiFormatReader",
+            );
+            setWarning(
+              "Falling back to slower scanner, detection may take longer.",
+            );
+            detector = null;
+            if (stream) {
+              stream.getTracks().forEach((t) => t.stop());
+              stream = null;
+            }
+            if (videoRef.current) videoRef.current.srcObject = null;
+            reader = new BrowserMultiFormatReader();
+            try {
+              controls = await reader.decodeFromVideoDevice(
+                undefined,
+                videoRef.current,
+                (result: any) => {
+                  if (result) onScan(result.getText());
+                },
+              );
+            } catch (err) {
+              console.error("fallback scanner error", err);
+            }
+            return;
+          }
         }
       } catch (e) {}
       requestAnimationFrame(scan);
     };
 
     const start = async () => {
+      frameCount = 0;
       try {
         if ("BarcodeDetector" in window) {
           // @ts-ignore
@@ -98,7 +130,10 @@ export default function TotpQrScanner({
         {error ? (
           <div className="text-rose-400 mb-2">{error}</div>
         ) : (
-          <video ref={videoRef} className="w-64 h-64" />
+          <>
+            {warning && <div className="text-amber-400 mb-2">{warning}</div>}
+            <video ref={videoRef} className="w-64 h-64" />
+          </>
         )}
         <div className="flex justify-end mt-2 space-x-2">
           {error && (
@@ -107,6 +142,7 @@ export default function TotpQrScanner({
               className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/10"
               onClick={() => {
                 setError(null);
+                setWarning(null);
                 startRef.current?.();
               }}
             >
