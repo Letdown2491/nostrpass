@@ -82,9 +82,9 @@ export default function TotpQrScanner({
   }, [onScan]);
 
   return (
-    <div className="fixed inset-0 z-999 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-999 p-4 rounded-lg border border-slate-700 bg-slate-900">
+      <div className="relative z-50 p-4 rounded-lg border border-slate-700 bg-slate-900">
         {error ? (
           <div className="text-rose-400 mb-2">{error}</div>
         ) : (
