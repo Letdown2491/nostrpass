@@ -366,8 +366,8 @@ export default function ItemList({
               const code = otpMap[key] || "—";
 
               const host = hostnameFromSite(it.site);
-              const wantsFavicon = settings.showFavicons && !!host;
-              const showFavicon = wantsFavicon && !badFavicons[host];
+              const showFavicon =
+                settings.showFavicons && !!host && !badFavicons[host];
 
               return (
                 <tr key={key} className="border-b border-slate-800/60">
@@ -391,11 +391,9 @@ export default function ItemList({
                               }))
                             }
                           />
-                        ) : wantsFavicon ? (
-                          <OfflineFavicon />
                         ) : (
-                          <span
-                            className="w-5 h-5 rounded-sm bg-slate-800/50 inline-block"
+                          <OfflineFavicon
+                            className="w-5 h-5"
                             aria-hidden="true"
                           />
                         )}

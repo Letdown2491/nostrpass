@@ -68,22 +68,6 @@ export default function SettingsModal({
 
         <form className="space-y-5" onSubmit={submit}>
           <fieldset className="space-y-3">
-            <legend className="text-slate-400 text-xs mb-1">
-              Display &amp; Table
-            </legend>
-
-            {/* Show deleted */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.showDeleted}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, showDeleted: e.target.checked }))
-                }
-              />
-              Show deleted
-            </label>
-
             {/* Favicons on/off */}
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -93,7 +77,7 @@ export default function SettingsModal({
                   setForm((s) => ({ ...s, showFavicons: e.target.checked }))
                 }
               />
-              Show favicons
+              Fetch remote favicons
             </label>
             <p className="text-xs text-slate-500">
               Favicons are loaded from a remote service. Disable for stricter
@@ -206,6 +190,22 @@ export default function SettingsModal({
                 </select>
               </label>
             </div>
+
+            {/* Show deleted */}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.showDeleted}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, showDeleted: e.target.checked }))
+                }
+              />
+              Display deleted items
+            </label>
+            <p className="text-xs text-slate-500">
+              Your relay may not support note deletion so we use some magic to
+              hide them.
+            </p>
           </fieldset>
 
           <div className="flex items-center justify-end gap-2 pt-2">
