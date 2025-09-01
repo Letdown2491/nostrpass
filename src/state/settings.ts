@@ -18,6 +18,7 @@ export type Settings = {
     source: "ddg" | "custom";
     customBase?: string; // e.g. https://icons.example.com/ip3/
   };
+  categories: string[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -26,6 +27,16 @@ export const DEFAULT_SETTINGS: Settings = {
   truncateFields: true,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
+  categories: [
+    "Communication",
+    "Development",
+    "Education",
+    "Household",
+    "Personal",
+    "Shopping",
+    "Work",
+    "Uncategorized",
+  ],
 };
 
 export function parseSettingsEvent(ev: NostrEvent): Settings | null {
@@ -42,6 +53,9 @@ export function parseSettingsEvent(ev: NostrEvent): Settings | null {
         ...DEFAULT_SETTINGS.favicon,
         ...(parsed?.favicon ?? {}),
       },
+      categories: Array.isArray(parsed?.categories)
+        ? parsed.categories
+        : DEFAULT_SETTINGS.categories,
     } as Settings;
   } catch {
     return null;

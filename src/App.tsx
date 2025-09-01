@@ -4,6 +4,7 @@ import Unlock from "./components/Unlock";
 import ItemList from "./components/ItemList";
 import NewLoginModal from "./components/NewLoginModal";
 import ProfileBadge from "./components/ProfileBadge";
+import { LogoIcon } from "./components/LogoIcon";
 import SettingsModal from "./components/SettingsModal";
 import { RelayPool } from "./lib/relays";
 import type { NostrEvent } from "./lib/types";
@@ -143,6 +144,11 @@ export default function App() {
     await poolRef.current?.publish(ev);
   };
 
+  const deleteCategory = async (cat: string) => {
+    const nextCategories = settings.categories.filter((c) => c !== cat);
+    await saveSettings({ ...settings, categories: nextCategories });
+  };
+
   if (!pubkey) {
     return <Login onConnected={(pk) => setPubkey(pk)} />;
   }
@@ -178,6 +184,7 @@ export default function App() {
           onNewLogin={() => setShowNewLogin(true)}
           settings={settings}
           onOpenSettings={() => setShowSettings(true)}
+          onSaveSettings={saveSettings}
         />
       </section>
 
@@ -187,6 +194,9 @@ export default function App() {
         onClose={() => setShowNewLogin(false)}
         pubkey={pubkey!}
         onPublish={publish}
+        settings={settings}
+        categories={settings.categories}
+        onSaveSettings={saveSettings}
       />
 
       {/* Settings modal */}

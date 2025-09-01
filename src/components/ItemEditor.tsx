@@ -29,6 +29,7 @@ export default function ItemEditor({
       site,
       username,
       password,
+      category: "",
     };
     const d = `com.you.pm:item:${item.id}`;
     const ev = await buildItemEvent(d, item, pubkey);

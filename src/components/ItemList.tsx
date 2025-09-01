@@ -11,7 +11,7 @@ import type { Settings } from "../state/settings";
 
 const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 type PublishResult = { successes: string[]; failures: Record<string, string> };
-type SortKey = "title" | "site" | "username" | "type" | "updatedAt";
+type SortKey = "title" | "category" | "site" | "username";
 const STEP = 30; // 30-second TOTP step
 
 // normalize a site string into a safe <a href="..."> target
@@ -58,6 +58,7 @@ export default function ItemList({
   onNewLogin,
   settings,
   onOpenSettings,
+  onSaveSettings,
 }: {
   events: NostrEvent[];
   pubkey: string;
@@ -65,6 +66,7 @@ export default function ItemList({
   onNewLogin: () => void;
   settings: Settings;
   onOpenSettings: () => void;
+  onSaveSettings: (next: Settings) => Promise<void>;
 }) {
   const [rows, setRows] = React.useState<any[]>([]);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
@@ -173,6 +175,7 @@ export default function ItemList({
       flagBusy(it.id, true);
       const body = {
         ...it,
+        category: it.category,
         deleted: true,
         updatedAt: Math.floor(Date.now() / 1000),
         version: (it.version ?? 0) + 1,
@@ -191,6 +194,7 @@ export default function ItemList({
       flagBusy(it.id, true);
       const body = {
         ...it,
+        category: it.category,
         deleted: false,
         updatedAt: Math.floor(Date.now() / 1000),
         version: (it.version ?? 0) + 1,
@@ -212,7 +216,7 @@ export default function ItemList({
       .filter((r) => {
         if (!q) return true;
         const hay =
-          `${r.title ?? ""} ${r.site ?? ""} ${r.username ?? ""} ${r.type ?? ""}`.toLowerCase();
+          `${r.title ?? ""} ${r.site ?? ""} ${r.username ?? ""} ${r.category ?? ""} ${r.type ?? ""}`.toLowerCase();
         return hay.includes(q);
       });
   }, [rows, query, settings.showDeleted]);
@@ -220,8 +224,8 @@ export default function ItemList({
   const sorted = React.useMemo(() => {
     const arr = filtered.slice();
     arr.sort((a, b) => {
-      const va = a[sortBy] ?? "";
-      const vb = b[sortBy] ?? "";
+      const va = a[sortBy] ?? (sortBy === "category" ? "Uncategorized" : "");
+      const vb = b[sortBy] ?? (sortBy === "category" ? "Uncategorized" : "");
       let cmp = 0;
       if (sortBy === "updatedAt") cmp = (va || 0) - (vb || 0);
       else cmp = String(va).localeCompare(String(vb));
@@ -309,6 +313,11 @@ export default function ItemList({
                 ind={sortIndicator("title")}
               />
               <Th
+                label="Category"
+                onClick={() => toggleSort("category")}
+                ind={sortIndicator("category")}
+              />
+              <Th
                 label="Site"
                 onClick={() => toggleSort("site")}
                 ind={sortIndicator("site")}
@@ -333,7 +342,7 @@ export default function ItemList({
           <tbody>
             {visible.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-6 text-slate-400 text-center">
+                <td colSpan={7} className="py-6 text-slate-400 text-center">
                   No items yet.
                 </td>
               </tr>
@@ -379,6 +388,10 @@ export default function ItemList({
                           {it.title || "(untitled)"}
                         </span>
                       </span>
+                    </td>
+
+                    <td className="py-2 px-2">
+                      {it.category || "Uncategorized"}
                     </td>
 
                     <td className="py-2 px-2">
@@ -497,6 +510,8 @@ export default function ItemList({
         pubkey={pubkey}
         onPublish={onPublish}
         item={editItem}
+        settings={settings}
+        onSaveSettings={onSaveSettings}
       />
     </div>
   );

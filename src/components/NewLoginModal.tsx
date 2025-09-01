@@ -2,6 +2,7 @@ import React from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { NostrEvent } from "../lib/types";
 import { buildItemEvent } from "../state/vault";
+import type { Settings } from "../state/settings";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 
@@ -10,11 +11,15 @@ export default function NewLoginModal({
   onClose,
   pubkey,
   onPublish,
+  settings,
+  onSaveSettings,
 }: {
   open: boolean;
   onClose: () => void;
   pubkey: string;
   onPublish: (ev: NostrEvent) => Promise<PublishResult>;
+  settings: Settings;
+  onSaveSettings: (next: Settings) => Promise<void>;
 }) {
   const [title, setTitle] = React.useState("");
   const [site, setSite] = React.useState("");
@@ -22,6 +27,9 @@ export default function NewLoginModal({
   const [password, setPassword] = React.useState("");
   const [totpSecret, setTotpSecret] = React.useState(""); // 2FA secret (Base32)
   const [notes, setNotes] = React.useState("");
+  const [category, setCategory] = React.useState("Personal");
+  const [newCat, setNewCat] = React.useState("");
+  const [addingCategory, setAddingCategory] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showTotpSecret, setShowTotpSecret] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
@@ -29,6 +37,11 @@ export default function NewLoginModal({
     ok: boolean | null;
     text: string;
   }>({ ok: null, text: "" });
+
+  const sortedCategories = React.useMemo(
+    () => [...(settings.categories || [])].sort((a, b) => a.localeCompare(b)),
+    [settings.categories],
+  );
 
   React.useEffect(() => {
     if (!open) return;
@@ -44,6 +57,9 @@ export default function NewLoginModal({
     setShowPassword(false);
     setShowTotpSecret(false);
     setStatus({ ok: null, text: "" });
+    setCategory("Personal");
+    setNewCat("");
+    setAddingCategory(false);
   }, [open]);
 
   if (!open) return null;
@@ -55,6 +71,9 @@ export default function NewLoginModal({
     setPassword("");
     setTotpSecret("");
     setNotes("");
+    setCategory("Personal");
+    setNewCat("");
+    setAddingCategory(false);
     setShowPassword(false);
     setShowTotpSecret(false);
     setStatus({ ok: null, text: "" });
@@ -78,6 +97,7 @@ export default function NewLoginModal({
       password,
       totpSecret, // <-- new field
       notes,
+      category,
       version: 1,
       createdAt: now,
       updatedAt: now,
@@ -107,6 +127,35 @@ export default function NewLoginModal({
     }
   };
 
+  const addCategory = async () => {
+    const trimmed = newCat.trim();
+    if (!trimmed) return;
+    if (settings.categories.includes(trimmed)) {
+      setNewCat("");
+      setCategory(trimmed);
+      setAddingCategory(false);
+      return;
+    }
+    const next = [...settings.categories, trimmed].sort((a, b) =>
+      a.localeCompare(b),
+    );
+    await onSaveSettings({ ...settings, categories: next });
+    setNewCat("");
+    setCategory(trimmed);
+    setAddingCategory(false);
+  };
+
+  const handleDelete = async (cat: string) => {
+    if (
+      !confirm(
+        "All logins with this category will be marked 'Uncategorized'. I understand?",
+      )
+    )
+      return;
+    await onDeleteCategory(cat);
+    if (category === cat) setCategory("Uncategorized");
+  };
+
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
@@ -123,6 +172,55 @@ export default function NewLoginModal({
       >
         <div className="text-lg font-semibold mb-4">New Login</div>
         <form className="space-y-3" onSubmit={submit}>
+          <label className="text-sm block">
+            <div className="text-slate-400 text-xs mb-1">Category</div>
+            <div className="flex items-center gap-2">
+              <select
+                className="flex-1 rounded-lg border border-slate-700 bg-transparent px-3 py-1 focus:outline-none"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                {sortedCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {!addingCategory && (
+                <button
+                  type="button"
+                  className="px-2 py-1 rounded border border-slate-700 text-slate-400 hover:text-slate-300"
+                  onClick={() => setAddingCategory(true)}
+                  title="Add category"
+                >
+                  +
+                </button>
+              )}
+            </div>
+            {addingCategory && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  className="flex-1 bg-transparent focus:outline-none border border-slate-700 rounded-lg px-3 py-1"
+                  value={newCat}
+                  onChange={(e) => setNewCat(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCategory();
+                    }
+                  }}
+                  placeholder="New Category"
+                />
+                <button
+                  type="button"
+                  className="text-emerald-400 hover:text-emerald-300"
+                  onClick={addCategory}
+                >
+                  Add
+                </button>
+              </div>
+            )}
+          </label>
           <label className="text-sm block">
             <div className="text-slate-400 text-xs mb-1">Title</div>
             <input
