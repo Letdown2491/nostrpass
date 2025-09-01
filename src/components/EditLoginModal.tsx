@@ -2,6 +2,7 @@ import React from "react";
 import type { NostrEvent } from "../lib/types";
 import { buildItemEvent } from "../state/vault";
 import type { Settings } from "../state/settings";
+import { generatePassword } from "../lib/crypto";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
 
@@ -84,6 +85,23 @@ export default function EditLoginModal({
   if (!open || !item) return null;
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+
+  const genPassword = async () => {
+    const pw = generatePassword();
+    setPassword(pw);
+    try {
+      await navigator.clipboard.writeText(pw);
+      if (settings.clipboardClearSec) {
+        setTimeout(() => {
+          navigator.clipboard.writeText("").catch((e) => {
+            console.error("Failed to clear clipboard", e);
+          });
+        }, settings.clipboardClearSec * 1000);
+      }
+    } catch (e) {
+      console.error("Failed to copy password", e);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,6 +301,14 @@ export default function EditLoginModal({
                 title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? "Hide" : "Show"}
+              </button>
+              <button
+                type="button"
+                className="px-3 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+                onClick={genPassword}
+                title="Generate password"
+              >
+                Generate
               </button>
             </div>
           </label>
