@@ -41,6 +41,7 @@ export default function NewLoginModal({
   const [showPassword, setShowPassword] = React.useState(false);
   const [showTotpSecret, setShowTotpSecret] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
+  const scannedRef = React.useRef(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [status, setStatus] = React.useState<{
     ok: boolean | null;
@@ -96,6 +97,10 @@ export default function NewLoginModal({
     setNewCat("");
     setAddingCategory(false);
   }, [open, defaultCategory]);
+
+  React.useEffect(() => {
+    if (showScanner) scannedRef.current = false;
+  }, [showScanner]);
 
   if (!open) return null;
 
@@ -229,7 +234,9 @@ export default function NewLoginModal({
   };
 
   const handleQrScan = (data: string) => {
-    if (!data) return;
+    if (!data || scannedRef.current) return;
+    scannedRef.current = true;
+
     let secret = "";
     const trimmed = data.trim();
 
