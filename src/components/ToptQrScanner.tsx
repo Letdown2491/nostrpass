@@ -1,4 +1,5 @@
 import React from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 export default function TotpQrScanner({
   onScan,
@@ -13,19 +14,27 @@ export default function TotpQrScanner({
   React.useEffect(() => {
     let stream: MediaStream;
     let detector: any;
+    let reader: BrowserMultiFormatReader | null = null;
     let active = true;
 
     const scan = async () => {
-      if (!active || !detector || !videoRef.current) return;
+      if (!active || !videoRef.current) return;
+
       try {
-        const codes = await detector.detect(videoRef.current);
-        if (codes.length > 0) {
-          onScan(codes[0].rawValue);
-          return;
+        if (detector) {
+          const codes = await detector.detect(videoRef.current);
+          if (codes.length > 0) {
+            onScan(codes[0].rawValue);
+            return;
+          }
+        } else if (reader) {
+          const result = await reader.decodeFromVideoElement(videoRef.current);
+          if (result) {
+            onScan(result.getText());
+            return;
+          }
         }
-      } catch (e) {
-        console.error("scan error", e);
-      }
+      } catch (e) {}
       requestAnimationFrame(scan);
     };
 
@@ -35,8 +44,7 @@ export default function TotpQrScanner({
           // @ts-ignore
           detector = new window.BarcodeDetector({ formats: ["qr_code"] });
         } else {
-          setError("BarcodeDetector not supported in this browser");
-          return;
+          reader = new BrowserMultiFormatReader();
         }
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
@@ -56,6 +64,7 @@ export default function TotpQrScanner({
 
     return () => {
       active = false;
+      reader?.reset();
       if (stream) stream.getTracks().forEach((t) => t.stop());
     };
   }, [onScan]);
