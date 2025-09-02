@@ -8,57 +8,14 @@ import {
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
 import type { Settings } from "../state/settings";
-import {
-  SettingsIcon,
-  OfflineFavicon,
-  EditIcon,
-  DeleteIcon,
-  RestoreIcon,
-  SpinnerIcon,
-} from "./Icons";
-import { Edit } from "lucide-react";
+import { SettingsIcon } from "./Icons";
+import ItemRow from "./ItemRow";
+import ItemTableHeader from "./ItemTableHeader";
+import useItemSorting from "../hooks/useItemSorting";
 
 const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 type PublishResult = { successes: string[]; failures: Record<string, string> };
-type SortKey = "title" | "category" | "site" | "username";
 const STEP = 30; // 30-second TOTP step
-
-// normalize a site string into a safe <a href="..."> target
-function toHref(site?: string | null): string | null {
-  if (!site) return null;
-  const v = String(site).trim();
-  if (!v) return null;
-  const hasProto = /^https?:\/\//i.test(v);
-  const looksLikeDomain =
-    /^[a-z0-9.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(v) || v.startsWith("www.");
-  if (hasProto) return v;
-  if (looksLikeDomain) return `https://${v}`;
-  return null;
-}
-
-// extract hostname from site (adds https:// if needed)
-function hostnameFromSite(site?: string | null): string | null {
-  const href = toHref(site);
-  if (!href) return null;
-  try {
-    const u = new URL(href);
-    return (u.hostname || "").toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
-// favicon URL from settings
-function faviconUrlForHost(host: string, settings: Settings): string {
-  if (settings.favicon?.source === "custom") {
-    const base = (settings.favicon.customBase || "").trim();
-    // ensure trailing slash
-    const normalized = base ? base.replace(/\/?$/, "/") : "";
-    return `${normalized}${host}.ico`;
-  }
-  // default to DuckDuckGo ip3
-  return `https://icons.duckduckgo.com/ip3/${host}.ico`;
-}
 
 export default function ItemList({
   events,
@@ -81,21 +38,8 @@ export default function ItemList({
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
   const [editItem, setEditItem] = React.useState<any | null>(null);
 
-  // search + sort (default alphabetical)
-  const [query, setQuery] = React.useState("");
-  const [sortBy, setSortBy] = React.useState<SortKey>("title");
-  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
-  const sortInitRef = React.useRef(false);
-
-  // initialize sort from settings once
-  React.useEffect(() => {
-    if (sortInitRef.current) return;
-    if (settings?.defaultSort) {
-      setSortBy(settings.defaultSort.key as SortKey);
-      setSortDir(settings.defaultSort.dir);
-      sortInitRef.current = true;
-    }
-  }, [settings?.defaultSort]);
+  const { query, setQuery, visible, toggleSort, sortIndicator } =
+    useItemSorting(rows, settings);
 
   // live TOTP codes map (idOrD -> code), refresh ONLY every 30s boundary
   const [otpMap, setOtpMap] = React.useState<Record<string, string>>({});
@@ -228,83 +172,6 @@ export default function ItemList({
     }
   };
 
-  // computed table data
-  const filtered = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return rows
-      .filter((r) => (settings.showDeleted ? true : !r.deleted))
-      .filter((r) => {
-        if (!q) return true;
-        const hay =
-          `${r.title ?? ""} ${r.site ?? ""} ${r.username ?? ""} ${r.category ?? ""} ${r.type ?? ""}`.toLowerCase();
-        return hay.includes(q);
-      });
-  }, [rows, query, settings.showDeleted]);
-
-  const sorted = React.useMemo(() => {
-    const arr = filtered.slice();
-    arr.sort((a, b) => {
-      const va = a[sortBy] ?? (sortBy === "category" ? "Uncategorized" : "");
-      const vb = b[sortBy] ?? (sortBy === "category" ? "Uncategorized" : "");
-      let cmp = 0;
-      if (sortBy === "updatedAt") cmp = (va || 0) - (vb || 0);
-      else cmp = String(va).localeCompare(String(vb));
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-    return arr;
-  }, [filtered, sortBy, sortDir]);
-
-  const toggleSort = (key: SortKey) => {
-    if (sortBy === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortBy(key);
-      setSortDir(key === "updatedAt" ? "desc" : "asc");
-    }
-  };
-
-  const sortIndicator = (key: SortKey) =>
-    sortBy === key ? (sortDir === "asc" ? "▲" : "▼") : "";
-
-  const copyText = async (text?: string) => {
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      if (settings.clipboardClearSec) {
-        setTimeout(() => {
-          navigator.clipboard.writeText("").catch((e) => {
-            console.error("Failed to clear clipboard", e);
-          });
-        }, settings.clipboardClearSec * 1000);
-      }
-    } catch (e) {
-      console.error("Failed to copy text", e);
-    }
-  };
-
-  const copyPassword = async (pw?: string) => {
-    if (!pw) return;
-    try {
-      await navigator.clipboard.writeText(pw);
-      if (settings.clipboardClearSec) {
-        setTimeout(() => {
-          navigator.clipboard.writeText("").catch((e) => {
-            console.error("Failed to clear clipboard", e);
-          });
-        }, settings.clipboardClearSec * 1000);
-      }
-    } catch (e) {
-      console.error("Failed to copy password", e);
-    }
-  };
-
-  const visible = sorted;
-
-  // helper: conditional truncation classes + tooltip
-  const trunc = (enabled: boolean) =>
-    enabled
-      ? "block max-w-[40ch] overflow-hidden text-ellipsis whitespace-nowrap"
-      : "";
-
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -339,40 +206,11 @@ export default function ItemList({
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-slate-400 border-b border-slate-800">
-              <Th
-                label="Title"
-                onClick={() => toggleSort("title")}
-                ind={sortIndicator("title")}
-              />
-              <Th
-                label="Category"
-                onClick={() => toggleSort("category")}
-                ind={sortIndicator("category")}
-              />
-              <Th
-                label="Site"
-                onClick={() => toggleSort("site")}
-                ind={sortIndicator("site")}
-              />
-              <Th
-                label="Username"
-                onClick={() => toggleSort("username")}
-                ind={sortIndicator("username")}
-              />
-              <th className="py-2 px-2">Password</th>
-              <th className="py-2 px-2 text-center">
-                <span className="inline-flex items-center gap-2">
-                  2FA Token
-                  <span className="text-xs text-slate-500 font-mono tabular-nums">
-                    ({String(remaining).padStart(2, "0")}s)
-                  </span>
-                </span>
-              </th>
-              <th className="py-2 px-2 text-center">Actions</th>
-            </tr>
-          </thead>
+          <ItemTableHeader
+            remaining={remaining}
+            toggleSort={toggleSort}
+            sortIndicator={sortIndicator}
+          />
           <tbody>
             {visible.length === 0 && (
               <tr>
@@ -383,179 +221,23 @@ export default function ItemList({
             )}
             {visible.map((it) => {
               const isBusy = !!busy[it.id];
-              const siteHref = toHref(it.site);
               const key = it.id ?? it.d;
               const code = otpMap[key] || "—";
 
-              const host = hostnameFromSite(it.site);
-              const displayHost = host || it.site;
-              const showFavicon =
-                settings.showFavicons && !!host && !badFavicons[host];
-
               return (
-                <tr key={key} className="border-b border-slate-800/60">
-                  <>
-                    <td className="py-2 px-2">
-                      <span className="inline-flex items-center gap-2">
-                        {showFavicon ? (
-                          <img
-                            key={`${host}-${faviconRetry}`}
-                            src={faviconUrlForHost(host!, settings)}
-                            alt=""
-                            aria-hidden="true"
-                            className="w-5 h-5 rounded-sm bg-slate-800/50"
-                            loading="lazy"
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                            onError={() =>
-                              setBadFavicons((m) => ({
-                                ...m,
-                                [host!]: true,
-                              }))
-                            }
-                          />
-                        ) : (
-                          <OfflineFavicon
-                            className="w-5 h-5"
-                            aria-hidden="true"
-                          />
-                        )}
-                        <span
-                          className={trunc(settings.truncateFields)}
-                          title={String(it.title || "")}
-                        >
-                          {it.title || "(untitled)"}
-                        </span>
-                      </span>
-                    </td>
-
-                    <td className="py-2 px-2">
-                      {it.category || "Uncategorized"}
-                    </td>
-
-                    <td className="py-2 px-2">
-                      {siteHref ? (
-                        <a
-                          href={siteHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline decoration-dotted hover:decoration-solid"
-                          title={siteHref}
-                        >
-                          <span
-                            className={trunc(settings.truncateFields)}
-                            title={String(displayHost || "")}
-                          >
-                            {displayHost}
-                          </span>
-                        </a>
-                      ) : (
-                        <span
-                          className={trunc(settings.truncateFields)}
-                          title={String(displayHost || "")}
-                        >
-                          {displayHost || "—"}
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="py-2 px-2">
-                      {it.username ? (
-                        <span
-                          className="cursor-pointer hover:underline decoration-dotted"
-                          title="Copy username"
-                          onClick={() => copyText(it.username)}
-                        >
-                          {it.username}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-
-                    <td className="py-2 px-2">
-                      {it.password ? (
-                        <span
-                          className="hover:underline"
-                          onClick={() => copyPassword(it.password)}
-                          title="Copy password"
-                        >
-                          **********
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-
-                    <td className="py-2 px-2 font-mono tabular-nums text-center">
-                      {code && code !== "—" ? (
-                        <span
-                          className="cursor-pointer hover:underline decoration-dotted"
-                          title="Copy 2FA token"
-                          onClick={() => copyText(code)}
-                        >
-                          {code}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-
-                    <td className="py-2 px-2">
-                      <div className="flex items-center gap-2 justify-end">
-                        {!it.deleted && (
-                          <button
-                            className="px-2 py-1 rounded border border-slate-600 hover:bg-slate-600/50 disabled:opacity-50"
-                            onClick={() => setEditItem(it)}
-                            disabled={isBusy}
-                            title="Edit"
-                            aria-label="Edit item"
-                          >
-                            <EditIcon size={20} />
-                          </button>
-                        )}
-                        {!it.deleted ? (
-                          <button
-                            className="px-2 py-1 rounded border border-rose-400 text-rose-400 hover:bg-rose-600/50 disabled:opacity-50"
-                            onClick={() => deleteItem(it)}
-                            disabled={isBusy}
-                            title="Delete"
-                            aria-label="Delete item"
-                            aria-busy={isBusy}
-                          >
-                            {/* The trash‑can icon – always visible */}
-                            {!isBusy && <DeleteIcon size={20} />}
-
-                            {/* Either a spinner (while busy) or the word “Delete” */}
-                            {isBusy ? (
-                              <SpinnerIcon size={20} className="animate-spin" />
-                            ) : (
-                              ""
-                            )}
-                          </button>
-                        ) : (
-                          <button
-                            className="px-2 py-1 rounded border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40 disabled:opacity-50"
-                            onClick={() => restoreItem(it)}
-                            disabled={isBusy}
-                            title="Restore"
-                            aria-label="Restore item"
-                          >
-                            {/* The trash‑can icon – always visible */}
-                            {!isBusy && <RestoreIcon size={20} />}
-
-                            {/* Either a spinner (while busy) or the word “Delete” */}
-                            {isBusy ? (
-                              <SpinnerIcon size={20} className="animate-spin" />
-                            ) : (
-                              ""
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </>
-                </tr>
+                <ItemRow
+                  key={key}
+                  item={it}
+                  code={code}
+                  settings={settings}
+                  isBusy={isBusy}
+                  onEdit={() => setEditItem(it)}
+                  onDelete={() => deleteItem(it)}
+                  onRestore={() => restoreItem(it)}
+                  badFavicons={badFavicons}
+                  setBadFavicons={setBadFavicons}
+                  faviconRetry={faviconRetry}
+                />
               );
             })}
           </tbody>
@@ -573,27 +255,5 @@ export default function ItemList({
         onSaveSettings={onSaveSettings}
       />
     </div>
-  );
-}
-
-function Th({
-  label,
-  onClick,
-  ind,
-}: {
-  label: string;
-  onClick: () => void;
-  ind: string;
-}) {
-  return (
-    <th
-      className="py-2 px-2 cursor-pointer select-none"
-      onClick={onClick}
-      title="Sort"
-    >
-      <span className="inline-flex items-center gap-1">
-        {label} <span className="text-xs">{ind}</span>
-      </span>
-    </th>
   );
 }

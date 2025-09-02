@@ -15,6 +15,13 @@ export default function ItemEditor({
   const [site, setSite] = React.useState("");
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [status, setStatus] = React.useState<{
+    ok: boolean | null;
+    text: string;
+  }>({
+    ok: null,
+    text: "",
+  });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +39,42 @@ export default function ItemEditor({
       category: "",
     };
     const d = `com.you.pm:item:${item.id}`;
-    const ev = await buildItemEvent(d, item, pubkey);
-    onPublish(ev);
-    setTitle("");
-    setSite("");
-    setUsername("");
-    setPassword("");
+    try {
+      const ev = await buildItemEvent(d, item, pubkey);
+      const res = await onPublish(ev);
+      const okCount = res?.successes?.length || 0;
+      const failCount = Object.keys(res?.failures || {}).length;
+      if (okCount > 0) {
+        setStatus({ ok: true, text: "Saved" });
+        setTitle("");
+        setSite("");
+        setUsername("");
+        setPassword("");
+      } else if (failCount === 0 || !navigator.onLine) {
+        setStatus({ ok: true, text: "Saved locally (pending)" });
+        setTitle("");
+        setSite("");
+        setUsername("");
+        setPassword("");
+      } else {
+        setStatus({
+          ok: false,
+          text: failCount
+            ? `No relay accepted write (${failCount} failed)`
+            : "No confirmation received",
+        });
+      }
+    } catch (err: any) {
+      if (!navigator.onLine) {
+        setStatus({ ok: true, text: "Saved locally (pending)" });
+        setTitle("");
+        setSite("");
+        setUsername("");
+        setPassword("");
+      } else {
+        setStatus({ ok: false, text: err?.message || "Failed to publish" });
+      }
+    }
   };
 
   return (

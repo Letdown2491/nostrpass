@@ -5,7 +5,7 @@ import { buildItemEvent } from "../state/vault";
 import type { Settings } from "../state/settings";
 import { generatePassword } from "../lib/crypto";
 import { passwordStrength } from "check-password-strength";
-import TotpQrScanner from "./ToptQrScanner";
+import TotpQrScanner from "./TotpQrScanner";
 import { ShowIcon, HideIcon, GenerateIcon, ScanCodeIcon } from "./Icons";
 
 type PublishResult = { successes: string[]; failures: Record<string, string> };
