@@ -118,12 +118,11 @@ export class RelayPool {
       } catch {}
     };
 
-    for (const [url, ws] of this.sockets)
-      for (const [url, ws] of this.sockets) {
-        const fn = handler(url);
-        ws.addEventListener("message", fn);
-        listeners.push([ws, fn]);
-      }
+    for (const [url, ws] of this.sockets) {
+      const fn = handler(url);
+      ws.addEventListener("message", fn);
+      listeners.push([ws, fn]);
+    }
     this.broadcast(["REQ", subId, ...filters]); // queued if needed
     return {
       subId,
