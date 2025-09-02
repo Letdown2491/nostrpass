@@ -8,6 +8,7 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 - **Fast UI**: New/Edit via modals, searchable & sortable table, optional favicons.
 - **Copy helpers**: Click to copy **username**, **password**, or **2FA token** (with optional auto-clear).
 - **TOTP support**: Store a Base32 **2FA Secret Key**; live 30-second codes are shown in the table.
+- **Offline support**: currently the app does support offline actions (add/edit/delete) which will sync back to the selected relays after internet access is restore.
 - **Settings**: Synced and local device settings (favicons, blur 2FA, etc).
 
 ## How it works (short)
