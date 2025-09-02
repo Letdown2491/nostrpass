@@ -47,7 +47,11 @@ export default function SettingsModal({
     setSaving(true);
     setStatus({ ok: null, text: "" });
     try {
-      await onSave(form);
+      const sanitized = {
+        ...form,
+        relays: form.relays.filter((r) => r.trim().length > 0),
+      };
+      await onSave(sanitized);
       setStatus({ ok: true, text: "Saved" });
       onClose();
     } catch (err: any) {
@@ -73,6 +77,48 @@ export default function SettingsModal({
 
         <form className="space-y-5" onSubmit={submit}>
           <fieldset className="space-y-3">
+            {/* Relay URLs */}
+            <div className="space-y-2 text-sm">
+              <div className="text-slate-400 text-xs">Relay URLs</div>
+              {form.relays.map((r, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <input
+                    className="w-full"
+                    value={r}
+                    onChange={(e) =>
+                      setForm((s) => {
+                        const next = s.relays.slice();
+                        next[idx] = e.target.value;
+                        return { ...s, relays: next };
+                      })
+                    }
+                    placeholder="wss://example.com"
+                  />
+                  <button
+                    type="button"
+                    className="text-xs text-rose-400"
+                    onClick={() =>
+                      setForm((s) => ({
+                        ...s,
+                        relays: s.relays.filter((_, i) => i !== idx),
+                      }))
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="px-2 py-1 rounded-lg border border-slate-600 text-xs hover:bg-slate-600/10"
+                onClick={() =>
+                  setForm((s) => ({ ...s, relays: [...s.relays, ""] }))
+                }
+              >
+                Add relay
+              </button>
+            </div>
+
             {/* Favicons on/off */}
             <label className="flex items-center gap-2 text-sm">
               <input

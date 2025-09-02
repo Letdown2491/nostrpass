@@ -52,7 +52,7 @@ pnpm build              # or: npm run build / yarn build
 - **Sync & decrypt**: the newest version of each item is fetched from your relays and decrypted locally after EOSE.
 
 ### Configuration
-- **Relays**: Update the default relay list in the code (e.g., src/App.tsx) to match your preferred read/write relays.
+- **Relays**: Configure your preferred read/write relays from the Settings modal. The list is synced to your Nostr settings.
 - **Favicons**: You can show site icons in the table (DuckDuckGo ip3 or a custom proxy). Toggle and source are in Settings.
 - **Sorting & truncation**: Default sort (e.g., Title A→Z) and truncation (ellipsis with tooltip) can be configured in Settings.
 

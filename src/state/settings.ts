@@ -19,6 +19,7 @@ export type Settings = {
     customBase?: string; // e.g. https://icons.example.com/ip3/
   };
   categories: string[];
+  relays: string[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -29,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autolockSec: 300,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
+  relays: ["wss://premium.primal.net"],
   categories: [
     "Communication",
     "Development",
@@ -61,6 +63,9 @@ export function parseSettingsEvent(ev: NostrEvent): Settings | null {
             new Set([...DEFAULT_SETTINGS.categories, ...parsed.categories]),
           )
         : DEFAULT_SETTINGS.categories,
+      relays: Array.isArray(parsed?.relays)
+        ? Array.from(new Set(parsed.relays))
+        : DEFAULT_SETTINGS.relays,
     } as Settings;
   } catch {
     return null;
@@ -72,11 +77,15 @@ export async function buildSettingsEvent(
   pubkey: string,
   settings: Settings,
 ): Promise<NostrEvent> {
+  const sanitized: Settings = {
+    ...settings,
+    relays: Array.from(new Set(settings.relays)),
+  };
   const unsigned = {
     kind: 30078,
     created_at: Math.floor(Date.now() / 1000),
     tags: [["d", SETTINGS_D]],
-    content: JSON.stringify(settings),
+    content: JSON.stringify(sanitized),
     pubkey,
   };
 

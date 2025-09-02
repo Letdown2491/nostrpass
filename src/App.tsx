@@ -20,11 +20,6 @@ import {
   buildSettingsEvent,
 } from "./state/settings";
 
-const DEFAULT_RELAYS = [
-  "wss://premium.primal.net",
-  // "ws://127.0.0.1:3355",
-];
-
 export default function App() {
   const [pubkey, setPubkey] = React.useState<string | null>(null);
   const [unlocked, setUnlocked] = React.useState(false);
@@ -109,7 +104,7 @@ export default function App() {
 
   const startSub = React.useCallback(
     (pk: string) => {
-      const pool = new RelayPool(DEFAULT_RELAYS);
+      const pool = new RelayPool(settings.relays);
       pool.connect();
       poolRef.current = pool;
 
@@ -177,7 +172,7 @@ export default function App() {
 
       publishPending();
     },
-    [storeEvent, publishPending],
+    [storeEvent, publishPending, settings.relays],
   );
 
   React.useEffect(() => {
@@ -196,6 +191,12 @@ export default function App() {
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
   }, [pubkey, unlocked, startSub, publishPending]);
+
+  React.useEffect(() => {
+    if (poolRef.current) {
+      poolRef.current.setRelays(settings.relays);
+    }
+  }, [settings.relays]);
 
   const prevUnlocked = React.useRef(unlocked);
   React.useEffect(() => {
