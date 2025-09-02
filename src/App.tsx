@@ -77,16 +77,24 @@ export default function App() {
   const publishPending = React.useCallback(async () => {
     if (!poolRef.current) return;
     const pending = await db.events.where("pending").equals(1).toArray();
-    for (const p of pending) {
-      try {
-        const res = await poolRef.current.publish(p.raw as NostrEvent);
-        if (res?.successes?.length) {
-          await db.events.update(p.id, { pending: 0 });
-        }
-      } catch {
-        // keep pending
-      }
-    }
+    const results = await Promise.allSettled(
+      pending.map(async (p) => {
+        const res = await poolRef.current!.publish(p.raw as NostrEvent);
+        return { p, res };
+      }),
+    );
+    await Promise.all(
+      results
+        .filter(
+          (
+            r,
+          ): r is PromiseFulfilledResult<{
+            p: (typeof pending)[number];
+            res: Awaited<ReturnType<RelayPool["publish"]>>;
+          }> => r.status === "fulfilled" && !!r.value.res?.successes?.length,
+        )
+        .map((r) => db.events.update(r.value.p.id, { pending: 0 })),
+    );
   }, []);
 
   const handleUnlocked = React.useCallback(async () => {
