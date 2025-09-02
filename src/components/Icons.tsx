@@ -415,3 +415,47 @@ export const SettingsIcon = ({
     <circle cx="12" cy="12" r="3" />
   </svg>
 );
+
+export interface NewLoginIconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon – defaults to 32 px. */
+  size?: number | string;
+  /** Stroke colour – defaults to `currentColor` so it inherits surrounding text colour. */
+  color?: string;
+}
+
+export const NewLoginIcon = ({
+  size = 32,
+  color = "currentColor",
+  ...svgProps
+}: NewLoginIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={3}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...svgProps}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* ── Left side ── */}
+    <line x1="0" y1="0" x2="0" y2="24" />
+
+    {/* ── Bottom side ── */}
+    <line x1="0" y1="24" x2="24" y2="24" />
+
+    {/* ── Right side (lower 75 %) ── */}
+    <line x1="24" y1="24" x2="24" y2="12" />
+
+    {/* ── Top side (first 25 %) ── */}
+    <line x1="0" y1="0" x2="12" y2="0" />
+
+    {/* ── Maximised plus sign ── */}
+    {/* Horizontal bar – from the end of the top line (x = 6) to the far right (x = 24) */}
+    <line x1="12" y1="6" x2="24" y2="6" />
+    {/* Vertical bar – from the top of the cut‑out (y = 0) down to where the right line resumes (y = 6) */}
+    <line x1="18" y1="0" x2="18" y2="12" />
+  </svg>
+);

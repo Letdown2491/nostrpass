@@ -8,7 +8,7 @@ import {
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
 import type { Settings } from "../state/settings";
-import { SettingsIcon } from "./Icons";
+import { NewLoginIcon, SettingsIcon } from "./Icons";
 import ItemRow from "./ItemRow";
 import ItemTableHeader from "./ItemTableHeader";
 import useItemSorting from "../hooks/useItemSorting";
@@ -280,15 +280,15 @@ export default function ItemList({
             autoComplete="off"
           />
           <button
-            className="inline-flex items-center justify-center h-10 px-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 whitespace-nowrap min-w-[5rem] shrink-0"
+            className="px-3 py-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40"
             onClick={onNewLogin}
             title="Create a new login"
             type="button"
           >
-            + {/* Add entry */}
+            <NewLoginIcon width="16" height="16" /> {/* Add entry */}
           </button>
           <button
-            className="px-3 py-3 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+            className="px-3 py-3 rounded-lg border border-slate-600 hover:bg-slate-600/50"
             type="button"
             onClick={onOpenSettings}
             title="Open settings"
