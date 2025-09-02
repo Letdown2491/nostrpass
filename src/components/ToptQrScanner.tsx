@@ -29,7 +29,16 @@ export default function TotpQrScanner({
         if (detector) {
           const codes = await detector.detect(videoRef.current);
           if (codes.length > 0) {
+            if (stream) {
+              stream.getTracks().forEach((t) => t.stop());
+              stream = null;
+            }
+            if (videoRef.current) {
+              videoRef.current.pause();
+              videoRef.current.srcObject = null;
+            }
             onScan(codes[0].rawValue);
+            onClose();
             return;
           }
           frameCount++;
@@ -52,7 +61,18 @@ export default function TotpQrScanner({
                 undefined,
                 videoRef.current,
                 (result: any) => {
-                  if (result) onScan(result.getText());
+                  if (result) {
+                    controls?.stop();
+                    if (videoRef.current) {
+                      const s = videoRef.current
+                        .srcObject as MediaStream | null;
+                      if (s) s.getTracks().forEach((t) => t.stop());
+                      videoRef.current.pause();
+                      videoRef.current.srcObject = null;
+                    }
+                    onScan(result.getText());
+                    onClose();
+                  }
                 },
               );
             } catch (err) {
@@ -93,7 +113,17 @@ export default function TotpQrScanner({
             undefined,
             videoRef.current,
             (result: any) => {
-              if (result) onScan(result.getText());
+              if (result) {
+                controls?.stop();
+                if (videoRef.current) {
+                  const s = videoRef.current.srcObject as MediaStream | null;
+                  if (s) s.getTracks().forEach((t) => t.stop());
+                  videoRef.current.pause();
+                  videoRef.current.srcObject = null;
+                }
+                onScan(result.getText());
+                onClose();
+              }
             },
           );
         }
