@@ -2,7 +2,7 @@ import React from "react";
 import type { Settings } from "../state/settings";
 import { copyText, copyPassword } from "../lib/clipboard";
 import { toHref, hostnameFromSite } from "../lib/url";
-import { EditIcon, OfflineFavicon, RestoreIcon, SpinnerIcon } from "./Icons";
+import { OfflineFavicon, RestoreIcon, SpinnerIcon } from "./Icons";
 
 type Props = {
   item: any;
@@ -135,7 +135,7 @@ export default function ItemRow({
               disabled={isBusy}
             >
               <option value="" disabled>
-                Action
+                Select
               </option>
               <option value="copy-username">Copy Username</option>
               <option value="copy-password">Copy Password</option>
