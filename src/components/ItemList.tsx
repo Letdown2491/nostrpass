@@ -109,25 +109,28 @@ export default function ItemList({
       setPending(events.length);
       onLoaded();
 
-      for (const ev of events) {
-        if (!active) break;
+      const promises = events.map(async (ev) => {
         const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-        if (!d.startsWith(NS_ITEM_PREFIX)) {
-          setPending((p) => p - 1);
-          continue;
-        }
-        try {
-          const obj = (await decryptItemContentUsingSession(
-            ev.content,
-          )) as LoginItem;
-          if (!active) break;
-          setRows((prev) => [...prev, { d, ...obj } as ItemRow]);
-        } catch {
-          // silently skip decrypt failures
-        } finally {
-          setPending((p) => p - 1);
-        }
-      }
+        if (!d.startsWith(NS_ITEM_PREFIX)) return null;
+        const obj = (await decryptItemContentUsingSession(
+          ev.content,
+        )) as LoginItem;
+        return { d, ...obj } as ItemRow;
+      });
+
+      const results = await Promise.allSettled(promises);
+      if (!active) return;
+
+      const decoded = results
+        .filter(
+          (r): r is PromiseFulfilledResult<ItemRow | null> =>
+            r.status === "fulfilled",
+        )
+        .map((r) => r.value)
+        .filter((r): r is ItemRow => !!r);
+
+      setRows(decoded);
+      setPending(0);
     })();
     return () => {
       active = false;
