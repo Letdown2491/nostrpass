@@ -31,7 +31,9 @@ export default function App() {
   const [events, setEvents] = React.useState<NostrEvent[]>([]);
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [showNewLogin, setShowNewLogin] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
+  const [eose, setEose] = React.useState(false);
+  const [decrypted, setDecrypted] = React.useState(false);
+  const loading = !eose || !decrypted;
   // settings state (synced to npub)
   const [settings, setSettings] = React.useState<Settings>(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = React.useState(false);
@@ -102,7 +104,8 @@ export default function App() {
     });
     const arr = Array.from(latest.values());
     setEvents(arr.map((r) => r.raw as NostrEvent));
-    setLoading(arr.length === 0);
+    setEose(false);
+    setDecrypted(false);
     setUnlocked(true);
   }, []);
 
@@ -137,7 +140,7 @@ export default function App() {
           });
         },
         () => {
-          setLoading(false);
+          setEose(true);
         },
       );
 
@@ -176,7 +179,7 @@ export default function App() {
 
       publishPending();
     },
-    [storeEvent, publishPending, setLoading],
+    [storeEvent, publishPending],
   );
 
   React.useEffect(() => {
@@ -306,12 +309,13 @@ export default function App() {
 
       {/* Table of items (search/sort/edit/delete/restore) + New Login + Settings control */}
       <section>
-        {loading && events.length === 0 ? (
+        {loading && (
           <div className="py-6 text-center text-slate-500">
             The hamster wheels are turning! Please hang tight while we load your
             data.
           </div>
-        ) : (
+        )}
+        <div className={loading ? "hidden" : ""}>
           <ItemList
             events={events}
             pubkey={pubkey!}
@@ -320,8 +324,9 @@ export default function App() {
             settings={settings}
             onOpenSettings={() => setShowSettings(true)}
             onSaveSettings={saveSettings}
+            onLoaded={() => setDecrypted(true)}
           />
-        )}
+        </div>
       </section>
 
       {/* Modal for new login */}
