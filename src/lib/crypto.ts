@@ -19,7 +19,11 @@ export function generatePassword(length = 16): string {
   const charset =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
   const bytes = new Uint8Array(length);
-  globalThis.crypto.getRandomValues(bytes);
+  const cryptoObj = globalThis.crypto;
+  if (!cryptoObj?.getRandomValues) {
+    throw new Error("Secure random number generator not available.");
+  }
+  cryptoObj.getRandomValues(bytes);
   let result = "";
   for (let i = 0; i < length; i++) {
     result += charset[bytes[i] % charset.length];
