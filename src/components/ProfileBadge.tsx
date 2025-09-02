@@ -20,7 +20,7 @@ export default function ProfileBadge({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="leading-tight text-right">
+      <div className="leading-tight text-right hidden sm:block">
         <div className="font-medium">{name}</div>
         <div className="text-xs text-slate-400 break-all">
           {shortNpub(npub)}
