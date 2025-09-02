@@ -40,6 +40,7 @@ export default function ItemList({
   }
 
   const [rows, setRows] = React.useState<ItemRow[]>([]);
+  const [pending, setPending] = React.useState(0);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
   const [editItem, setEditItem] = React.useState<ItemRow | null>(null);
 
@@ -99,26 +100,33 @@ export default function ItemList({
     (async () => {
       if (!getPassphrase()) {
         setRows([]);
-        return;
-      } // locked; skip decrypts
-
-      const results = await Promise.all(
-        events.map(async (ev) => {
-          const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-          if (!d.startsWith(NS_ITEM_PREFIX)) return null; // skip anything not our item namespace
-          try {
-            const obj = (await decryptItemContentUsingSession(
-              ev.content,
-            )) as LoginItem;
-            return { d, ...obj } as ItemRow;
-          } catch {
-            return null; // silently skip decrypt failures
-          }
-        }),
-      );
-      if (active) {
-        setRows(results.filter((r): r is ItemRow => r !== null));
+        setPending(0);
         onLoaded();
+        return;
+      }
+
+      setRows([]);
+      setPending(events.length);
+      onLoaded();
+
+      for (const ev of events) {
+        if (!active) break;
+        const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+        if (!d.startsWith(NS_ITEM_PREFIX)) {
+          setPending((p) => p - 1);
+          continue;
+        }
+        try {
+          const obj = (await decryptItemContentUsingSession(
+            ev.content,
+          )) as LoginItem;
+          if (!active) break;
+          setRows((prev) => [...prev, { d, ...obj } as ItemRow]);
+        } catch {
+          // silently skip decrypt failures
+        } finally {
+          setPending((p) => p - 1);
+        }
       }
     })();
     return () => {
@@ -273,7 +281,7 @@ export default function ItemList({
             sortIndicator={sortIndicator}
           />
           <tbody>
-            {visible.length === 0 && (
+            {visible.length === 0 && pending === 0 && (
               <tr>
                 <td colSpan={4} className="py-6 text-slate-400 text-center">
                   No items yet.
@@ -301,6 +309,25 @@ export default function ItemList({
                 />
               );
             })}
+            {Array.from({ length: pending }).map((_, i) => (
+              <tr
+                key={`placeholder-${i}`}
+                className="border-b border-slate-800/60 animate-pulse"
+              >
+                <td className="py-2 px-2">
+                  <div className="h-5 w-24 bg-slate-700 rounded" />
+                </td>
+                <td className="py-2 px-2">
+                  <div className="h-5 w-24 bg-slate-700 rounded" />
+                </td>
+                <td className="py-2 px-2">
+                  <div className="h-5 w-24 bg-slate-700 rounded" />
+                </td>
+                <td className="py-2 px-2 text-right">
+                  <div className="h-5 w-8 bg-slate-700 rounded ml-auto" />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

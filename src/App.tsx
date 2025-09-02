@@ -32,8 +32,7 @@ export default function App() {
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [showNewLogin, setShowNewLogin] = React.useState(false);
   const [eose, setEose] = React.useState(false);
-  const [decrypted, setDecrypted] = React.useState(false);
-  const loading = !eose || !decrypted;
+  const loading = !eose;
   // settings state (synced to npub)
   const [settings, setSettings] = React.useState<Settings>(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = React.useState(false);
@@ -105,7 +104,6 @@ export default function App() {
     const arr = Array.from(latest.values());
     setEvents(arr.map((r) => r.raw as NostrEvent));
     setEose(false);
-    setDecrypted(false);
     setUnlocked(true);
   }, []);
 
@@ -324,7 +322,7 @@ export default function App() {
             settings={settings}
             onOpenSettings={() => setShowSettings(true)}
             onSaveSettings={saveSettings}
-            onLoaded={() => setDecrypted(true)}
+            onLoaded={() => {}}
           />
         </div>
       </section>

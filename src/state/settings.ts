@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
     "Communication",
     "Development",
     "Education",
+    "Entertainment",
     "Household",
     "Personal",
     "Shopping",
