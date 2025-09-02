@@ -89,6 +89,7 @@ export default function ItemEditor({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="w-full"
+        autoComplete="off"
         required
       />
       <input
@@ -96,6 +97,7 @@ export default function ItemEditor({
         value={site}
         onChange={(e) => setSite(e.target.value)}
         className="w-full"
+        autoComplete="off"
         required
       />
       <input
@@ -103,6 +105,7 @@ export default function ItemEditor({
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         className="w-full"
+        autoComplete="off"
         required
       />
       <input
@@ -111,6 +114,7 @@ export default function ItemEditor({
         onChange={(e) => setPassword(e.target.value)}
         className="w-full"
         type="password"
+        autoComplete="off"
         required
       />
       <button className="primary py-2">Encrypt & Publish</button>

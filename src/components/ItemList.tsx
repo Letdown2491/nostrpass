@@ -277,6 +277,7 @@ export default function ItemList({
             className="w-full h-10 px-3 rounded-lg border border-slate-700 bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald-600"
             value={inputQuery}
             onChange={(e) => debouncedSetQuery(e.target.value)}
+            autoComplete="off"
           />
           <button
             className="inline-flex items-center justify-center h-10 px-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 whitespace-nowrap min-w-[5rem] shrink-0"
@@ -284,11 +285,8 @@ export default function ItemList({
             title="Create a new login"
             type="button"
           >
-            + New
+            + {/* Add entry */}
           </button>
-        </div>
-
-        <div className="flex items-center gap-2 ml-auto">
           <button
             className="px-3 py-3 rounded-lg border border-slate-600 hover:bg-slate-600/10"
             type="button"

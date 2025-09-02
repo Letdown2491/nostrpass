@@ -2,6 +2,8 @@
 // Accepts common Base32 secrets (case/space/“=” insensitive).
 
 const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+// Cache of imported CryptoKeys, indexed by normalized Base32 secrets
+const keyCache = new Map<string, CryptoKey>();
 
 function base32Decode(b32: string): Uint8Array {
   const s = b32.toUpperCase().replace(/[\s=]/g, "");
@@ -22,7 +24,7 @@ function base32Decode(b32: string): Uint8Array {
 }
 
 async function hotp(
-  secret: Uint8Array,
+  key: CryptoKey,
   counter: number,
   digits = 6,
 ): Promise<string> {
@@ -34,13 +36,6 @@ async function hotp(
   view.setUint32(0, hi);
   view.setUint32(4, lo);
 
-  const key = await crypto.subtle.importKey(
-    "raw",
-    secret,
-    { name: "HMAC", hash: "SHA-1" },
-    false,
-    ["sign"],
-  );
   const sigBuf = await crypto.subtle.sign("HMAC", key, msg);
   const h = new Uint8Array(sigBuf);
 
@@ -63,9 +58,21 @@ export async function totpFromBase32(
   digits = 6,
 ): Promise<string | null> {
   try {
-    const sec = base32Decode(secretB32);
+    const normalized = secretB32.toUpperCase().replace(/[\s=]/g, "");
+    let key = keyCache.get(normalized);
+    if (!key) {
+      const sec = base32Decode(normalized);
+      key = await crypto.subtle.importKey(
+        "raw",
+        sec.buffer as ArrayBuffer,
+        { name: "HMAC", hash: "SHA-1" },
+        false,
+        ["sign"],
+      );
+      keyCache.set(normalized, key);
+    }
     const counter = Math.floor(epochMs / 1000 / step);
-    return await hotp(sec, counter, digits);
+    return await hotp(key, counter, digits);
   } catch {
     return null;
   }

@@ -34,6 +34,7 @@ export default function Unlock({
         value={pw}
         onChange={(e) => setPw(e.target.value)}
         className="w-full"
+        autoComplete="off"
         required
       />
       <button className="primary w-full py-2" disabled={busy}>
