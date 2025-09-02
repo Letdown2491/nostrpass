@@ -9,6 +9,7 @@ import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
 import type { Settings } from "../state/settings";
 import {
+  SettingsIcon,
   OfflineFavicon,
   EditIcon,
   DeleteIcon,
@@ -315,23 +316,23 @@ export default function ItemList({
             onChange={(e) => setQuery(e.target.value)}
           />
           <button
-            className="inline-flex items-center justify-center h-10 px-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 whitespace-nowrap min-w-[7.5rem] shrink-0"
+            className="inline-flex items-center justify-center h-10 px-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 whitespace-nowrap min-w-[5rem] shrink-0"
             onClick={onNewLogin}
             title="Create a new login"
             type="button"
           >
-            New Login
+            + New
           </button>
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
           <button
-            className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+            className="px-3 py-3 rounded-lg border border-slate-600 hover:bg-slate-600/10"
             type="button"
             onClick={onOpenSettings}
             title="Open settings"
           >
-            Settings
+            <SettingsIcon width="16" height="16" />
           </button>
         </div>
       </div>

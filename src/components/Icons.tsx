@@ -384,3 +384,34 @@ export const ScanCodeIcon = ({
     <circle cx="18" cy="9" r="0.8" fill={color} stroke="none" />
   </svg>
 );
+
+export interface SettingsIconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon – defaults to 32 px. */
+  size?: number | string;
+  /** Stroke colour – defaults to `currentColor` so it inherits surrounding text colour. */
+  color?: string;
+}
+
+export const SettingsIcon = ({
+  size = 32,
+  color = "currentColor",
+  ...svgProps
+}: SettingsIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...svgProps}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Gear teeth */}
+    <path d="M19.4 12.9c.04-.3.06-.61.06-.9s-.02-.6-.06-.9l2.03-1.58a.5.5 0 00.12-.63l-1.92-3.32a.5.5 0 00-.6-.22l-2.39.96a7.03 7.03 0 00-1.56-.9l-.36-2.53A.5.5 0 0014.5 3h-4a.5.5 0 00-.5.42l-.36 2.53c-.57.22-1.1.52-1.56.9l-2.39-.96a.5.5 0 00-.6.22l-1.92 3.32a.5.5 0 00.12.63L4.6 11.1c-.04.3-.06.61-.06.9s.02.6.06.9l-2.03 1.58a.5.5 0 00-.12.63l1.92 3.32a.5.5 0 00.6.22l2.39-.96c.46.38 1 .68 1.56.9l.36 2.53a.5.5 0 00.5.42h4a.5.5 0 00.5-.42l.36-2.53c.57-.22 1.1-.52 1.56-.9l2.39.96a.5.5 0 00.6-.22l1.92-3.32a.5.5 0 00-.12-.63L19.4 12.9z" />
+    {/* Center hub */}
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
