@@ -39,32 +39,39 @@ export default function App() {
   const storeEvent = React.useCallback(
     async (ev: NostrEvent, pending: 1 | 0) => {
       const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-      await db.events.put({
-        id: ev.id,
-        d,
-        created_at: ev.created_at,
-        content: ev.content,
-        raw: ev,
-        pending,
-      });
+      let body: any;
       try {
-        const body: any = await decryptItemContentUsingSession(ev.content);
-        await db.index.put({
-          d,
-          version: body.version ?? 0,
-          updatedAt: body.updatedAt ?? ev.created_at,
-          type: body.type ?? "",
-          title: body.title,
-        });
+        body = await decryptItemContentUsingSession(ev.content);
       } catch {
-        await db.index.put({
-          d,
-          version: 0,
-          updatedAt: ev.created_at,
-          type: "",
-          title: undefined,
-        });
+        body = null;
       }
+      await db.transaction("rw", db.events, db.index, async () => {
+        await db.events.put({
+          id: ev.id,
+          d,
+          created_at: ev.created_at,
+          content: ev.content,
+          raw: ev,
+          pending,
+        });
+        if (body) {
+          await db.index.put({
+            d,
+            version: body.version ?? 0,
+            updatedAt: body.updatedAt ?? ev.created_at,
+            type: body.type ?? "",
+            title: body.title,
+          });
+        } else {
+          await db.index.put({
+            d,
+            version: 0,
+            updatedAt: ev.created_at,
+            type: "",
+            title: undefined,
+          });
+        }
+      });
     },
     [],
   );
@@ -122,7 +129,11 @@ export default function App() {
         dataFilters,
         async (ev) => {
           const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-          await storeEvent(ev, 0);
+          try {
+            await storeEvent(ev, 0);
+          } catch (err) {
+            console.warn("storeEvent failed", err);
+          }
           // Keep newest per d
           setEvents((prev) => {
             const idx = prev.findIndex(
