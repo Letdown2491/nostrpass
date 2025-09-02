@@ -32,11 +32,13 @@ export default function Login({
         extension/signer. Feel free to{" "}
         <a
           href="https://github.com/Letdown2491/nostrpass"
-          title="NostrPass on Girhub"
+          title="NostrPass on GitHub"
+          target="_blank"
+          rel="noopener noreferrer"
         >
           review our code
         </a>{" "}
-        yourself on Github.
+        yourself on GitHub.
       </p>
     </div>
   );
