@@ -139,7 +139,9 @@ export default function ItemRow({
               </option>
               <option value="copy-username">Copy Username</option>
               <option value="copy-password">Copy Password</option>
-              <option value="copy-token">Copy Token</option>
+              {(item.totpSecret || code !== "—") && (
+                <option value="copy-token">Copy Token</option>
+              )}
               <option value="edit">Edit</option>
               <option value="" disabled>
                 <hr />
