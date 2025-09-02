@@ -11,6 +11,7 @@ export default function TotpQrScanner({
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [warning, setWarning] = React.useState<string | null>(null);
+  const [scanning, setScanning] = React.useState(true);
   const startRef = React.useRef<() => void>();
 
   React.useEffect(() => {
@@ -47,7 +48,7 @@ export default function TotpQrScanner({
               "BarcodeDetector timeout, falling back to BrowserMultiFormatReader",
             );
             setWarning(
-              "Falling back to slower scanner, detection may take longer.",
+              "Couldn't read a QR code. Retrying with a slower scanner...",
             );
             detector = null;
             if (stream) {
@@ -87,6 +88,7 @@ export default function TotpQrScanner({
 
     const start = async () => {
       frameCount = 0;
+      setScanning(true);
       try {
         if ("BarcodeDetector" in window) {
           // @ts-ignore
@@ -139,6 +141,7 @@ export default function TotpQrScanner({
           } else {
             setError(err?.message || "Camera error");
           }
+          setScanning(false);
         }
       }
     };
@@ -161,6 +164,7 @@ export default function TotpQrScanner({
           <div className="text-rose-400 mb-2">{error}</div>
         ) : (
           <>
+            {scanning && <div className="text-slate-400 mb-2">Scanning...</div>}
             {warning && <div className="text-amber-400 mb-2">{warning}</div>}
             <video ref={videoRef} className="w-64 h-64" />
           </>
