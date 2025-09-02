@@ -2,8 +2,44 @@ import sodium from "libsodium-wrappers";
 import { hkdf } from "@noble/hashes/hkdf";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
-import { argon2id } from "hash-wasm";
-import type { Envelope, KdfParams } from "./types";
+import type { Envelope, KdfParams } from "../types";
+
+let argon2Worker: Worker | null = null;
+let nextMessageId = 0;
+const pending = new Map<
+  number,
+  { resolve: (value: Uint8Array) => void; reject: (reason: any) => void }
+>();
+
+function getArgon2Worker(): Worker {
+  if (!argon2Worker) {
+    argon2Worker = new Worker(new URL("./argon2.worker.ts", import.meta.url), {
+      type: "module",
+    });
+    argon2Worker.onmessage = (event: MessageEvent) => {
+      const { id, key, error } = event.data as {
+        id: number;
+        key?: ArrayBuffer;
+        error?: string;
+      };
+      const promise = pending.get(id);
+      if (!promise) return;
+      if (error) promise.reject(new Error(error));
+      else promise.resolve(new Uint8Array(key!));
+      pending.delete(id);
+    };
+    globalThis.addEventListener("beforeunload", () => {
+      argon2Worker?.terminate();
+      argon2Worker = null;
+    });
+  }
+  return argon2Worker;
+}
+
+export function terminateArgon2Worker() {
+  argon2Worker?.terminate();
+  argon2Worker = null;
+}
 
 export async function initSodium() {
   if ((sodium as any)._sodium_initialized) return;
@@ -43,17 +79,13 @@ export async function deriveVaultKey(
   passphrase: string,
   kdf: KdfParams,
 ): Promise<Uint8Array> {
+  const worker = getArgon2Worker();
   const salt = fromB64(kdf.salt_b64);
-  const key = await argon2id({
-    password: passphrase,
-    salt, // Uint8Array
-    parallelism: kdf.p, // threads
-    iterations: kdf.t, // time cost
-    memorySize: kdf.m, // KiB
-    hashLength: 32,
-    outputType: "binary", // Uint8Array
+  return new Promise((resolve, reject) => {
+    const id = nextMessageId++;
+    pending.set(id, { resolve, reject });
+    worker.postMessage({ id, passphrase, kdf, salt }, [salt.buffer]);
   });
-  return key as Uint8Array;
 }
 
 export function deriveItemKey(
