@@ -20,8 +20,16 @@ export class RelayPool {
   private queues: Map<string, RelayFrame[]> = new Map();
   private nextSub = 0;
 
-  constructor(urls: string[] = []) {
+  private debug: boolean;
+  private logger: Pick<Console, "log" | "warn">;
+  constructor(
+    urls: string[] = [],
+    debug = false,
+    logger: Pick<Console, "log" | "warn"> = console,
+  ) {
     this.urls = urls;
+    this.debug = debug;
+    this.logger = logger;
   }
   setRelays(urls: string[]) {
     this.urls = urls;
@@ -34,28 +42,33 @@ export class RelayPool {
       this.queues.set(url, []);
 
       ws.onopen = () => {
-        console.log("[relay] open", url);
+        if (this.debug) this.logger.log("[relay] open", url);
         const q = this.queues.get(url) ?? [];
         for (const frame of q) {
-          console.log("[relay→send]", url, frame);
+          if (this.debug) this.logger.log("[relay→send]", url, frame);
           try {
             ws.send(JSON.stringify(frame));
           } catch (e) {
-            console.warn("[relay] send error", url, e);
+            this.logger.warn("[relay] send error", url, e);
           }
         }
         this.queues.set(url, []);
       };
       ws.onclose = () => {
-        console.log("[relay] close", url);
+        if (this.debug) this.logger.log("[relay] close", url);
         this.sockets.delete(url);
       };
-      ws.onerror = (e) => console.warn("[relay] error", url, e);
+      ws.onerror = (e) => this.logger.warn("[relay] error", url, e);
       ws.onmessage = (msg) => {
         try {
-          console.log("[relay←recv]", url, JSON.parse(msg.data as string));
+          if (this.debug)
+            this.logger.log(
+              "[relay←recv]",
+              url,
+              JSON.parse(msg.data as string),
+            );
         } catch {
-          console.log("[relay←recv]", url, msg.data);
+          if (this.debug) this.logger.log("[relay←recv]", url, msg.data);
         }
       };
       this.sockets.set(url, ws);
@@ -66,13 +79,13 @@ export class RelayPool {
     const ws = this.sockets.get(url);
     if (!ws) return;
     if (ws.readyState === WebSocket.OPEN) {
-      console.log("[relay→send]", url, frame);
+      if (this.debug) this.logger.log("[relay→send]", url, frame);
       ws.send(JSON.stringify(frame));
     } else {
       const q = this.queues.get(url) ?? [];
       q.push(frame);
       this.queues.set(url, q);
-      console.log("[relay→queue]", url, frame);
+      if (this.debug) this.logger.log("[relay→queue]", url, frame);
     }
   }
 
@@ -99,7 +112,7 @@ export class RelayPool {
           const [sid] = rest;
           if (sid === subId) onEOSE && onEOSE();
         } else if (type === "NOTICE") {
-          console.warn("[NOTICE]", url, rest);
+          this.logger.warn("[NOTICE]", url, rest);
         }
       } catch {}
     };
