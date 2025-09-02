@@ -3,12 +3,7 @@ export async function copyText(text?: string, clearSec?: number) {
 
   const write = async (value: string) => {
     if (navigator?.clipboard?.writeText) {
-      const ok = await write(text);
-      if (!ok) {
-        alert("Your browser does not support copying to the clipboard.");
-        return;
-      }
-
+      await navigator.clipboard.writeText(value);
       return true;
     }
 
@@ -30,7 +25,11 @@ export async function copyText(text?: string, clearSec?: number) {
   };
 
   try {
-    await navigator.clipboard.writeText(text);
+    const ok = await write(text);
+    if (!ok) {
+      alert("Your browser does not support copying to the clipboard.");
+      return;
+    }
     if (clearSec) {
       setTimeout(() => {
         write("").catch((e) => {
