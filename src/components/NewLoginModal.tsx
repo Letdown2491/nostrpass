@@ -41,6 +41,8 @@ export default function NewLoginModal({
 
   if (!open) return null;
 
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+
   const submit = async (
     values: LoginFormValues,
     { reset }: { reset: () => void },
