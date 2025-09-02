@@ -262,6 +262,9 @@ export default function App() {
     await saveSettings({ ...settings, categories: nextCategories });
   };
 
+  // stable callback to avoid triggering ItemList refreshes on unrelated re-renders
+  const handleItemsLoaded = React.useCallback(() => {}, []);
+
   React.useEffect(() => {
     if (!unlocked || settings.autolockSec === null) return;
     const reset = () => {
@@ -322,7 +325,7 @@ export default function App() {
             settings={settings}
             onOpenSettings={() => setShowSettings(true)}
             onSaveSettings={saveSettings}
-            onLoaded={() => {}}
+            onLoaded={handleItemsLoaded}
           />
         </div>
       </section>
