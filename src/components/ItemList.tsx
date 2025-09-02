@@ -77,20 +77,21 @@ export default function ItemList({
         return;
       } // locked; skip decrypts
 
-      const out: ItemRow[] = [];
-      for (const ev of events) {
-        const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-        if (!d.startsWith(NS_ITEM_PREFIX)) continue; // skip anything not our item namespace
-        try {
-          const obj = (await decryptItemContentUsingSession(
-            ev.content,
-          )) as LoginItem;
-          out.push({ d, ...obj });
-        } catch {
-          continue; // silently skip decrypt failures
-        }
-      }
-      if (active) setRows(out);
+      const results = await Promise.all(
+        events.map(async (ev) => {
+          const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+          if (!d.startsWith(NS_ITEM_PREFIX)) return null; // skip anything not our item namespace
+          try {
+            const obj = (await decryptItemContentUsingSession(
+              ev.content,
+            )) as LoginItem;
+            return { d, ...obj } as ItemRow;
+          } catch {
+            return null; // silently skip decrypt failures
+          }
+        }),
+      );
+      if (active) setRows(results.filter((r): r is ItemRow => r !== null));
     })();
     return () => {
       active = false;
