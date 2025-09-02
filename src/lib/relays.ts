@@ -1,4 +1,4 @@
-import type { NostrEvent } from "./types";
+import type { NostrEvent, PublishResult } from "./types";
 
 type Filter = {
   ids?: string[];
@@ -12,10 +12,12 @@ type Filter = {
 
 type SubHandle = { subId: string; close: () => void };
 
+type RelayFrame = unknown[];
+
 export class RelayPool {
   private urls: string[] = [];
   private sockets: Map<string, WebSocket> = new Map();
-  private queues: Map<string, any[][]> = new Map();
+  private queues: Map<string, RelayFrame[]> = new Map();
   private nextSub = 0;
 
   constructor(urls: string[] = []) {
@@ -60,7 +62,7 @@ export class RelayPool {
     }
   }
 
-  private sendOrQueue(url: string, frame: any[]) {
+  private sendOrQueue(url: string, frame: RelayFrame) {
     const ws = this.sockets.get(url);
     if (!ws) return;
     if (ws.readyState === WebSocket.OPEN) {
@@ -74,7 +76,7 @@ export class RelayPool {
     }
   }
 
-  private broadcast(frame: any[]) {
+  private broadcast(frame: RelayFrame) {
     for (const url of this.sockets.keys()) this.sendOrQueue(url, frame);
   }
 
@@ -108,9 +110,7 @@ export class RelayPool {
     return { subId, close: () => this.broadcast(["CLOSE", subId]) };
   }
 
-  publish(
-    ev: NostrEvent,
-  ): Promise<{ successes: string[]; failures: Record<string, string> }> {
+  publish(ev: NostrEvent): Promise<PublishResult> {
     return new Promise((resolve) => {
       const oks = new Map<string, { ok: boolean; msg: string }>();
       const cleanupFns: Array<() => void> = [];

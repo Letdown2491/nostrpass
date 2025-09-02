@@ -1,5 +1,5 @@
 import React from "react";
-import type { NostrEvent } from "../lib/types";
+import type { LoginItem, NostrEvent, PublishResult } from "../lib/types";
 import {
   decryptItemContentUsingSession,
   getPassphrase,
@@ -14,7 +14,6 @@ import ItemTableHeader from "./ItemTableHeader";
 import useItemSorting from "../hooks/useItemSorting";
 
 const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
-type PublishResult = { successes: string[]; failures: Record<string, string> };
 const STEP = 30; // 30-second TOTP step
 
 export default function ItemList({
@@ -28,15 +27,19 @@ export default function ItemList({
 }: {
   events: NostrEvent[];
   pubkey: string;
-  onPublish: (ev: any) => Promise<PublishResult>;
+  onPublish: (ev: NostrEvent) => Promise<PublishResult>;
   onNewLogin: () => void;
   settings: Settings;
   onOpenSettings: () => void;
   onSaveSettings: (next: Settings) => Promise<void>;
 }) {
-  const [rows, setRows] = React.useState<any[]>([]);
+  interface ItemRow extends LoginItem {
+    d: string;
+  }
+
+  const [rows, setRows] = React.useState<ItemRow[]>([]);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
-  const [editItem, setEditItem] = React.useState<any | null>(null);
+  const [editItem, setEditItem] = React.useState<ItemRow | null>(null);
 
   const { query, setQuery, visible, toggleSort, sortIndicator } =
     useItemSorting(rows, settings);
@@ -74,12 +77,14 @@ export default function ItemList({
         return;
       } // locked; skip decrypts
 
-      const out: any[] = [];
+      const out: ItemRow[] = [];
       for (const ev of events) {
         const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
         if (!d.startsWith(NS_ITEM_PREFIX)) continue; // skip anything not our item namespace
         try {
-          const obj = await decryptItemContentUsingSession(ev.content);
+          const obj = (await decryptItemContentUsingSession(
+            ev.content,
+          )) as LoginItem;
           out.push({ d, ...obj });
         } catch {
           continue; // silently skip decrypt failures
@@ -128,7 +133,7 @@ export default function ItemList({
   const flagBusy = (id: string, v: boolean) =>
     setBusy((b) => ({ ...b, [id]: v }));
 
-  const deleteItem = async (it: any) => {
+  const deleteItem = async (it: ItemRow) => {
     if (
       !confirm(
         "Delete this item? This publishes a new version marked as deleted.",
@@ -137,14 +142,15 @@ export default function ItemList({
       return;
     try {
       flagBusy(it.id, true);
-      const body = {
-        ...it,
-        category: it.category,
+      const { d, ...rest } = it;
+      const body: LoginItem = {
+        ...rest,
+        category: rest.category,
         deleted: true,
         updatedAt: Math.floor(Date.now() / 1000),
-        version: (it.version ?? 0) + 1,
+        version: (rest.version ?? 0) + 1,
       };
-      const ev = await buildItemEvent(it.d, body, pubkey);
+      const ev = await buildItemEvent(d, body, pubkey);
       const res = await onPublish(ev);
       if (!res || res.successes.length === 0)
         alert("Delete publish did not get an OK from any relay.");
@@ -153,17 +159,18 @@ export default function ItemList({
     }
   };
 
-  const restoreItem = async (it: any) => {
+  const restoreItem = async (it: ItemRow) => {
     try {
       flagBusy(it.id, true);
-      const body = {
-        ...it,
-        category: it.category,
+      const { d, ...rest } = it;
+      const body: LoginItem = {
+        ...rest,
+        category: rest.category,
         deleted: false,
         updatedAt: Math.floor(Date.now() / 1000),
-        version: (it.version ?? 0) + 1,
+        version: (rest.version ?? 0) + 1,
       };
-      const ev = await buildItemEvent(it.d, body, pubkey);
+      const ev = await buildItemEvent(d, body, pubkey);
       const res = await onPublish(ev);
       if (!res || res.successes.length === 0)
         alert("Restore publish did not get an OK from any relay.");

@@ -17,7 +17,7 @@ export type VaultHeaderPayload = {
   relays: string[];
 };
 
-export type ItemBase = {
+export interface ItemBase {
   id: string;
   type: "login" | "note" | "apiKey" | "card" | "identity" | "totp";
   title: string;
@@ -27,9 +27,9 @@ export type ItemBase = {
   updatedAt: number;
   version: number;
   deleted?: boolean;
-};
+}
 
-export type LoginItem = ItemBase & {
+export interface LoginItem extends ItemBase {
   type: "login";
   site: string;
   username: string;
@@ -37,7 +37,8 @@ export type LoginItem = ItemBase & {
   category: string;
   url?: string;
   notes?: string;
-};
+  totpSecret?: string;
+}
 
 export type Envelope = {
   v: 1;
@@ -58,3 +59,8 @@ export type NostrEvent = {
   content: string;
   sig: string;
 };
+
+export interface PublishResult {
+  successes: string[];
+  failures: Record<string, string>;
+}

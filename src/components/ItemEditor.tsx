@@ -1,15 +1,14 @@
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
 import { buildItemEvent } from "../state/vault";
+import type { LoginItem, NostrEvent, PublishResult } from "../lib/types";
 
 export default function ItemEditor({
   pubkey,
   onPublish,
 }: {
   pubkey: string;
-  onPublish: (
-    ev: any,
-  ) => Promise<{ successes: string[]; failures: Record<string, string> }>;
+  onPublish: (ev: NostrEvent) => Promise<PublishResult>;
 }) {
   const [title, setTitle] = React.useState("");
   const [site, setSite] = React.useState("");
@@ -25,7 +24,7 @@ export default function ItemEditor({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const item = {
+    const item: LoginItem = {
       id: uuidv4(),
       type: "login",
       title,
@@ -64,7 +63,7 @@ export default function ItemEditor({
             : "No confirmation received",
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (!navigator.onLine) {
         setStatus({ ok: true, text: "Saved locally (pending)" });
         setTitle("");
@@ -72,7 +71,9 @@ export default function ItemEditor({
         setUsername("");
         setPassword("");
       } else {
-        setStatus({ ok: false, text: err?.message || "Failed to publish" });
+        const message =
+          err instanceof Error ? err.message : "Failed to publish";
+        setStatus({ ok: false, text: message });
       }
     }
   };
