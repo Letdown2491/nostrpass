@@ -143,9 +143,7 @@ export default function ItemRow({
                 <option value="copy-token">Copy Token</option>
               )}
               <option value="edit">Edit</option>
-              <option value="" disabled>
-                <hr />
-              </option>
+              <option disabled>────────</option>
               <option value="delete" className="text-rose-400">
                 Delete
               </option>
