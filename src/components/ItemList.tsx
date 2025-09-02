@@ -46,6 +46,25 @@ export default function ItemList({
   const { query, setQuery, visible, toggleSort, sortIndicator } =
     useItemSorting(rows, settings);
 
+  const [inputQuery, setInputQuery] = React.useState(query);
+  const queryTimeout = React.useRef<ReturnType<typeof setTimeout>>();
+
+  const debouncedSetQuery = (v: string) => {
+    setInputQuery(v);
+    if (queryTimeout.current) clearTimeout(queryTimeout.current);
+    queryTimeout.current = setTimeout(() => setQuery(v), 300);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (queryTimeout.current) clearTimeout(queryTimeout.current);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    setInputQuery(query);
+  }, [query]);
+
   // live TOTP codes map (idOrD -> code), refresh ONLY every 30s boundary
   const [otpMap, setOtpMap] = React.useState<Record<string, string>>({});
   const [counter, setCounter] = React.useState(
@@ -256,8 +275,8 @@ export default function ItemList({
           <input
             placeholder="Search all logins..."
             className="w-full h-10 px-3 rounded-lg border border-slate-700 bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald-600"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={inputQuery}
+            onChange={(e) => debouncedSetQuery(e.target.value)}
           />
           <button
             className="inline-flex items-center justify-center h-10 px-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 whitespace-nowrap min-w-[5rem] shrink-0"
