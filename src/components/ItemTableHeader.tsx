@@ -52,21 +52,7 @@ export default function ItemTableHeader({
           onClick={() => toggleSort("site")}
           ind={sortIndicator("site")}
         />
-        <Th
-          label="Username"
-          onClick={() => toggleSort("username")}
-          ind={sortIndicator("username")}
-        />
-        <th className="py-2 px-2">Password</th>
-        <th className="py-2 px-2 text-center">
-          <span className="inline-flex items-center gap-2">
-            2FA Token
-            <span className="text-xs text-slate-500 font-mono tabular-nums">
-              ({String(remaining).padStart(2, "0")}s)
-            </span>
-          </span>
-        </th>
-        <th className="py-2 px-2 text-center">Actions</th>
+        <th className="py-2 px-2 text-right">Actions</th>
       </tr>
     </thead>
   );

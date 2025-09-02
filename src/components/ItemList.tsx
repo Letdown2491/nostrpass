@@ -308,7 +308,7 @@ export default function ItemList({
           <tbody>
             {visible.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-6 text-slate-400 text-center">
+                <td colSpan={4} className="py-6 text-slate-400 text-center">
                   No items yet.
                 </td>
               </tr>

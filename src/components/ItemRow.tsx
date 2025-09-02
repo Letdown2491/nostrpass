@@ -2,13 +2,7 @@ import React from "react";
 import type { Settings } from "../state/settings";
 import { copyText, copyPassword } from "../lib/clipboard";
 import { toHref, hostnameFromSite } from "../lib/url";
-import {
-  OfflineFavicon,
-  EditIcon,
-  DeleteIcon,
-  RestoreIcon,
-  SpinnerIcon,
-} from "./Icons";
+import { EditIcon, OfflineFavicon, RestoreIcon, SpinnerIcon } from "./Icons";
 
 type Props = {
   item: any;
@@ -118,74 +112,42 @@ export default function ItemRow({
       </td>
 
       <td className="py-2 px-2">
-        {item.username ? (
-          <span
-            className="cursor-pointer hover:underline decoration-dotted"
-            title="Copy username"
-            onClick={() => copyText(item.username, settings.clipboardClearSec)}
-          >
-            {item.username}
-          </span>
-        ) : (
-          "—"
-        )}
-      </td>
-
-      <td className="py-2 px-2">
-        {item.password ? (
-          <span
-            className="hover:underline"
-            onClick={() =>
-              copyPassword(item.password, settings.clipboardClearSec)
-            }
-            title="Copy password"
-          >
-            **********
-          </span>
-        ) : (
-          "—"
-        )}
-      </td>
-
-      <td className="py-2 px-2 font-mono tabular-nums text-center">
-        {code && code !== "—" ? (
-          <span
-            className="cursor-pointer hover:underline decoration-dotted"
-            title="Copy 2FA token"
-            onClick={() => copyText(code, settings.clipboardClearSec)}
-          >
-            {code}
-          </span>
-        ) : (
-          "—"
-        )}
-      </td>
-
-      <td className="py-2 px-2">
         <div className="flex items-center gap-2 justify-end">
-          {!item.deleted && (
-            <button
-              className="px-2 py-1 rounded border border-slate-600 hover:bg-slate-600/50 disabled:opacity-50"
-              onClick={onEdit}
-              disabled={isBusy}
-              title="Edit"
-              aria-label="Edit item"
-            >
-              <EditIcon size={20} />
-            </button>
-          )}
           {!item.deleted ? (
-            <button
-              className="px-2 py-1 rounded border border-rose-400 text-rose-400 hover:bg-rose-600/50 disabled:opacity-50"
-              onClick={onDelete}
+            <select
+              className="px-2 py-1 rounded border border-slate-600 disabled:opacity-50"
+              onChange={(e) => {
+                const action = e.target.value;
+                if (action === "copy-username" && item.username) {
+                  copyText(item.username, settings.clipboardClearSec);
+                } else if (action === "copy-password" && item.password) {
+                  copyPassword(item.password, settings.clipboardClearSec);
+                } else if (action === "copy-token" && code && code !== "—") {
+                  copyText(code, settings.clipboardClearSec);
+                } else if (action === "edit") {
+                  onEdit();
+                } else if (action === "delete") {
+                  onDelete();
+                }
+                e.target.value = "";
+              }}
+              defaultValue=""
               disabled={isBusy}
-              title="Delete"
-              aria-label="Delete item"
-              aria-busy={isBusy}
             >
-              {!isBusy && <DeleteIcon size={20} />}
-              {isBusy ? <SpinnerIcon size={20} className="animate-spin" /> : ""}
-            </button>
+              <option value="" disabled>
+                Action
+              </option>
+              <option value="copy-username">Copy Username</option>
+              <option value="copy-password">Copy Password</option>
+              <option value="copy-token">Copy Token</option>
+              <option value="edit">Edit</option>
+              <option value="" disabled>
+                <hr />
+              </option>
+              <option value="delete" className="text-rose-400">
+                Delete
+              </option>
+            </select>
           ) : (
             <button
               className="px-2 py-1 rounded border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40 disabled:opacity-50"
