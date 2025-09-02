@@ -31,7 +31,7 @@ export default function App() {
   const [events, setEvents] = React.useState<NostrEvent[]>([]);
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [showNewLogin, setShowNewLogin] = React.useState(false);
-
+  const [loading, setLoading] = React.useState(true);
   // settings state (synced to npub)
   const [settings, setSettings] = React.useState<Settings>(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = React.useState(false);
@@ -100,7 +100,9 @@ export default function App() {
       const existing = latest.get(r.d);
       if (!existing || r.created_at > existing.created_at) latest.set(r.d, r);
     });
-    setEvents(Array.from(latest.values()).map((r) => r.raw as NostrEvent));
+    const arr = Array.from(latest.values());
+    setEvents(arr.map((r) => r.raw as NostrEvent));
+    setLoading(arr.length === 0);
     setUnlocked(true);
   }, []);
 
@@ -135,7 +137,7 @@ export default function App() {
           });
         },
         () => {
-          // EOSE for data
+          setLoading(false);
         },
       );
 
@@ -174,7 +176,7 @@ export default function App() {
 
       publishPending();
     },
-    [storeEvent, publishPending],
+    [storeEvent, publishPending, setLoading],
   );
 
   React.useEffect(() => {
@@ -304,15 +306,22 @@ export default function App() {
 
       {/* Table of items (search/sort/edit/delete/restore) + New Login + Settings control */}
       <section>
-        <ItemList
-          events={events}
-          pubkey={pubkey!}
-          onPublish={publish}
-          onNewLogin={() => setShowNewLogin(true)}
-          settings={settings}
-          onOpenSettings={() => setShowSettings(true)}
-          onSaveSettings={saveSettings}
-        />
+        {loading && events.length === 0 ? (
+          <div className="py-6 text-center text-slate-500">
+            The hamster wheels are turning! Please hang tight while we load your
+            data.
+          </div>
+        ) : (
+          <ItemList
+            events={events}
+            pubkey={pubkey!}
+            onPublish={publish}
+            onNewLogin={() => setShowNewLogin(true)}
+            settings={settings}
+            onOpenSettings={() => setShowSettings(true)}
+            onSaveSettings={saveSettings}
+          />
+        )}
       </section>
 
       {/* Modal for new login */}
