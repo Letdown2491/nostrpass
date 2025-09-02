@@ -53,6 +53,10 @@ export default function ItemList({
     STEP - (Math.floor(Date.now() / 1000) % STEP),
   );
 
+  const otpCache = React.useRef<
+    Record<string, { counter: number; code: string; secret: string }>
+  >({});
+
   // cache hosts with broken favicons to avoid repeated network attempts
   const [badFavicons, setBadFavicons] = React.useState<Record<string, boolean>>(
     {},
@@ -116,15 +120,42 @@ export default function ItemList({
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
-      const entries = await Promise.all(
-        rows.map(async (r) => {
+      const keys = new Set(rows.map((r) => r.id ?? r.d));
+      const toUpdate = rows
+        .filter((r) => r.totpSecret)
+        .map(async (r) => {
           const key = r.id ?? r.d;
-          if (!r.totpSecret) return [key, "" as const] as const;
-          const code = await totpFromBase32(r.totpSecret);
-          return [key, code ?? ""] as const;
-        }),
-      );
-      if (!cancelled) setOtpMap(Object.fromEntries(entries));
+          const cached = otpCache.current[key];
+          if (
+            cached &&
+            cached.counter === counter &&
+            cached.secret === r.totpSecret
+          )
+            return;
+          const code = await totpFromBase32(
+            r.totpSecret!,
+            counter * STEP * 1000,
+          );
+          if (!cancelled)
+            otpCache.current[key] = {
+              counter,
+              secret: r.totpSecret!,
+              code: code ?? "",
+            };
+        });
+      await Promise.all(toUpdate);
+      if (cancelled) return;
+
+      for (const key of Object.keys(otpCache.current)) {
+        if (!keys.has(key)) delete otpCache.current[key];
+      }
+
+      const next: Record<string, string> = {};
+      for (const r of rows) {
+        const key = r.id ?? r.d;
+        next[key] = otpCache.current[key]?.code ?? "";
+      }
+      setOtpMap(next);
     })();
     return () => {
       cancelled = true;
