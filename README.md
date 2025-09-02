@@ -19,7 +19,7 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 
 ### Prerequisites
 - **Node.js 18+** and **pnpm** or **Docker** installed.
-- A **NIP-07** browser signer such as Alby.
+- A **NIP-07** browser signer such as Alby, Amber, or Nostr Connect.
 
 ### Install & run (Docker)
 ```bash
