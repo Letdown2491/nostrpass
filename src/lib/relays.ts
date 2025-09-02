@@ -99,6 +99,7 @@ export class RelayPool {
     onEOSE?: () => void,
   ): SubHandle {
     const subId = `sub-${this.nextSub++}`;
+    const listeners: Array<[WebSocket, (msg: MessageEvent) => void]> = [];
 
     const handler = (url: string) => (msg: MessageEvent) => {
       try {
@@ -118,9 +119,19 @@ export class RelayPool {
     };
 
     for (const [url, ws] of this.sockets)
-      ws.addEventListener("message", handler(url));
+      for (const [url, ws] of this.sockets) {
+        const fn = handler(url);
+        ws.addEventListener("message", fn);
+        listeners.push([ws, fn]);
+      }
     this.broadcast(["REQ", subId, ...filters]); // queued if needed
-    return { subId, close: () => this.broadcast(["CLOSE", subId]) };
+    return {
+      subId,
+      close: () => {
+        for (const [ws, fn] of listeners) ws.removeEventListener("message", fn);
+        this.broadcast(["CLOSE", subId]);
+      },
+    };
   }
 
   publish(ev: NostrEvent): Promise<PublishResult> {
