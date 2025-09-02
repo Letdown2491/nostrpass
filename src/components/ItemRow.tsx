@@ -21,6 +21,7 @@ type Props = {
   badFavicons: Record<string, boolean>;
   setBadFavicons: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   faviconRetry: number;
+  style?: React.CSSProperties;
 };
 
 function faviconUrlForHost(host: string, settings: Settings): string {
@@ -43,6 +44,7 @@ export default function ItemRow({
   badFavicons,
   setBadFavicons,
   faviconRetry,
+  style,
 }: Props) {
   const siteHref = toHref(item.site);
   const host = hostnameFromSite(item.site);
@@ -55,7 +57,7 @@ export default function ItemRow({
       : "";
 
   return (
-    <tr className="border-b border-slate-800/60">
+    <tr style={style} className="border-b border-slate-800/60">
       <td className="py-2 px-2">
         <span className="inline-flex items-center gap-2">
           {showFavicon ? (

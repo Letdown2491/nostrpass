@@ -12,9 +12,11 @@ import { SettingsIcon } from "./Icons";
 import ItemRow from "./ItemRow";
 import ItemTableHeader from "./ItemTableHeader";
 import useItemSorting from "../hooks/useItemSorting";
+import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 
 const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 const STEP = 30; // 30-second TOTP step
+const ROW_HEIGHT = 52; // approximate row height for virtualization
 
 export default function ItemList({
   events,
@@ -210,6 +212,42 @@ export default function ItemList({
       flagBusy(it.id, false);
     }
   };
+
+  const Row = ({ index, style }: ListChildComponentProps) => {
+    const it = visible[index];
+    const isBusy = !!busy[it.id];
+    const key = it.id ?? it.d;
+    const code = otpMap[key] || "—";
+    return (
+      <ItemRow
+        item={it}
+        code={code}
+        settings={settings}
+        isBusy={isBusy}
+        onEdit={() => setEditItem(it)}
+        onDelete={() => deleteItem(it)}
+        onRestore={() => restoreItem(it)}
+        badFavicons={badFavicons}
+        setBadFavicons={setBadFavicons}
+        faviconRetry={faviconRetry}
+        style={style}
+      />
+    );
+  };
+
+  const OuterTable = React.forwardRef<
+    HTMLTableElement,
+    React.HTMLAttributes<HTMLTableElement>
+  >(({ style, children, ...rest }, ref) => (
+    <table ref={ref} style={style} className="w-full text-sm" {...rest}>
+      <ItemTableHeader
+        remaining={remaining}
+        toggleSort={toggleSort}
+        sortIndicator={sortIndicator}
+      />
+      {children}
+    </table>
+  ));
 
   return (
     <div className="space-y-3">
