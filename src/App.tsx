@@ -31,6 +31,9 @@ export default function App() {
   // settings state (synced to npub)
   const [settings, setSettings] = React.useState<Settings>(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = React.useState(false);
+  const [relayStatuses, setRelayStatuses] = React.useState<
+    Record<string, "connecting" | "open" | "closed" | "error">
+  >({});
 
   const poolRef = React.useRef<RelayPool | null>(null);
   const idleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,6 +123,24 @@ export default function App() {
   const startSub = React.useCallback(
     (pk: string) => {
       const pool = new RelayPool(settings.relays);
+      setRelayStatuses(
+        settings.relays.reduce(
+          (acc, url) => ({ ...acc, [url]: "connecting" }),
+          {},
+        ),
+      );
+      pool.addEventListener("open", (e) => {
+        const url = (e as CustomEvent<{ url: string }>).detail.url;
+        setRelayStatuses((s) => ({ ...s, [url]: "open" }));
+      });
+      pool.addEventListener("close", (e) => {
+        const url = (e as CustomEvent<{ url: string }>).detail.url;
+        setRelayStatuses((s) => ({ ...s, [url]: "closed" }));
+      });
+      pool.addEventListener("error", (e) => {
+        const url = (e as CustomEvent<{ url: string }>).detail.url;
+        setRelayStatuses((s) => ({ ...s, [url]: "error" }));
+      });
       pool.connect();
       poolRef.current = pool;
 
@@ -201,6 +222,12 @@ export default function App() {
   React.useEffect(() => {
     const onOnline = () => {
       if (poolRef.current) {
+        setRelayStatuses(
+          settings.relays.reduce(
+            (acc, url) => ({ ...acc, [url]: "connecting" }),
+            {},
+          ),
+        );
         poolRef.current.connect();
       } else if (pubkey && unlocked) {
         startSub(pubkey);
@@ -209,11 +236,19 @@ export default function App() {
     };
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
-  }, [pubkey, unlocked, startSub, publishPending]);
+  }, [pubkey, unlocked, startSub, publishPending, settings.relays]);
 
   React.useEffect(() => {
     if (poolRef.current) {
+      setRelayStatuses((prev) => {
+        const next: Record<string, "connecting" | "open" | "closed" | "error"> =
+          {};
+        for (const url of settings.relays)
+          next[url] = prev[url] ?? "connecting";
+        return next;
+      });
       poolRef.current.setRelays(settings.relays);
+      poolRef.current.connect();
     }
   }, [settings.relays]);
 
@@ -366,6 +401,7 @@ export default function App() {
         onClose={() => setShowSettings(false)}
         initial={settings}
         onSave={saveSettings}
+        relayStatuses={relayStatuses}
       />
     </div>
   );

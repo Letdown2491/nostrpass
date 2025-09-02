@@ -14,7 +14,7 @@ type SubHandle = { subId: string; close: () => void };
 
 type RelayFrame = unknown[];
 
-export class RelayPool {
+export class RelayPool extends EventTarget {
   private urls: string[] = [];
   private sockets: Map<string, WebSocket> = new Map();
   private queues: Map<string, RelayFrame[]> = new Map();
@@ -27,6 +27,7 @@ export class RelayPool {
     debug = false,
     logger: Pick<Console, "log" | "warn"> = console,
   ) {
+    super();
     this.urls = urls;
     this.debug = debug;
     this.logger = logger;
@@ -43,6 +44,7 @@ export class RelayPool {
 
       ws.onopen = () => {
         if (this.debug) this.logger.log("[relay] open", url);
+        this.dispatchEvent(new CustomEvent("open", { detail: { url } }));
         const q = this.queues.get(url) ?? [];
         for (const frame of q) {
           if (this.debug) this.logger.log("[relay→send]", url, frame);
@@ -57,8 +59,12 @@ export class RelayPool {
       ws.onclose = () => {
         if (this.debug) this.logger.log("[relay] close", url);
         this.sockets.delete(url);
+        this.dispatchEvent(new CustomEvent("close", { detail: { url } }));
       };
-      ws.onerror = (e) => this.logger.warn("[relay] error", url, e);
+      ws.onerror = (e) => {
+        this.logger.warn("[relay] error", url, e);
+        this.dispatchEvent(new CustomEvent("error", { detail: { url } }));
+      };
       ws.onmessage = (msg) => {
         try {
           if (this.debug)

@@ -14,11 +14,13 @@ export default function SettingsModal({
   onClose,
   initial,
   onSave,
+  relayStatuses,
 }: {
   open: boolean;
   onClose: () => void;
   initial: Settings;
   onSave: (next: Settings) => Promise<void>;
+  relayStatuses: Record<string, string>;
 }) {
   const [form, setForm] = React.useState<Settings>(initial);
   const [saving, setSaving] = React.useState(false);
@@ -80,34 +82,48 @@ export default function SettingsModal({
             {/* Relay URLs */}
             <div className="space-y-2 text-sm">
               <div className="text-slate-400 text-xs">Relay URLs</div>
-              {form.relays.map((r, idx) => (
-                <div key={idx} className="flex gap-2 items-center">
-                  <input
-                    className="w-full"
-                    value={r}
-                    onChange={(e) =>
-                      setForm((s) => {
-                        const next = s.relays.slice();
-                        next[idx] = e.target.value;
-                        return { ...s, relays: next };
-                      })
-                    }
-                    placeholder="wss://example.com"
-                  />
-                  <button
-                    type="button"
-                    className="text-xs text-rose-400"
-                    onClick={() =>
-                      setForm((s) => ({
-                        ...s,
-                        relays: s.relays.filter((_, i) => i !== idx),
-                      }))
-                    }
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
+              {form.relays.map((r, idx) => {
+                const trimmed = r.trim();
+                const status = relayStatuses[trimmed];
+                let color = "text-slate-500";
+                if (status === "open") color = "text-green-400";
+                else if (status === "connecting") color = "text-yellow-400";
+                else if (status === "error") color = "text-rose-400";
+                else if (status === "closed") color = "text-slate-400";
+                return (
+                  <div key={idx} className="flex gap-2 items-center">
+                    {status && (
+                      <span className={`text-xs capitalize ${color}`}>
+                        {status}
+                      </span>
+                    )}
+                    <input
+                      className="w-full"
+                      value={r}
+                      onChange={(e) =>
+                        setForm((s) => {
+                          const next = s.relays.slice();
+                          next[idx] = e.target.value;
+                          return { ...s, relays: next };
+                        })
+                      }
+                      placeholder="wss://example.com"
+                    />
+                    <button
+                      type="button"
+                      className="text-xs text-rose-400"
+                      onClick={() =>
+                        setForm((s) => ({
+                          ...s,
+                          relays: s.relays.filter((_, i) => i !== idx),
+                        }))
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                );
+              })}
               <button
                 type="button"
                 className="px-2 py-1 rounded-lg border border-slate-600 text-xs hover:bg-slate-600/10"
