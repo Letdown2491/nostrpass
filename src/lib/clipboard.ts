@@ -7,20 +7,24 @@ export async function copyText(text?: string, clearSec?: number) {
       return true;
     }
 
+    let textarea: HTMLTextAreaElement | null = null;
     try {
-      const textarea = document.createElement("textarea");
+      textarea = document.createElement("textarea");
       textarea.value = value;
       textarea.style.position = "fixed"; // avoid scrolling to bottom
       textarea.style.opacity = "0";
       document.body.appendChild(textarea);
       textarea.focus();
       textarea.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(textarea);
-      return ok;
+      return document.execCommand("copy");
     } catch (e) {
       console.error("execCommand copy failed", e);
       return false;
+    } finally {
+      if (textarea) {
+        textarea.value = "";
+        textarea.parentNode?.removeChild(textarea);
+      }
     }
   };
 
@@ -33,6 +37,7 @@ export async function copyText(text?: string, clearSec?: number) {
     if (clearSec) {
       setTimeout(() => {
         write("").catch((e) => {
+          if (e instanceof DOMException) return; // likely blocked by lack of user activation
           console.error("Failed to clear clipboard", e);
         });
       }, clearSec * 1000);
