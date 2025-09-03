@@ -41,6 +41,8 @@ export function ensureKdf(): KdfParams {
 
 export async function unlockVault(passphrase: string): Promise<void> {
   session.passphrase = utf8ToBytes(passphrase);
+  // Zero out the original passphrase string to avoid leaving sensitive data in memory
+  passphrase = "";
   session.unlocked = true;
   session.vaultKeyReady = true;
   await initSodium();
@@ -68,6 +70,8 @@ export async function decryptItemContent(content: string, passphrase: string) {
   const env = parseEnvelope(content);
   if (!env) throw new Error("Invalid envelope");
   const pwBytes = utf8ToBytes(passphrase);
+  // Clear passphrase after converting to bytes to minimize exposure
+  passphrase = "";
   try {
     return await decryptEnvelope(env, pwBytes);
   } finally {
