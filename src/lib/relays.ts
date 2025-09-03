@@ -109,6 +109,16 @@ export class RelayPool extends EventTarget {
     for (const url of this.sockets.keys()) this.sendOrQueue(url, frame);
   }
 
+  close() {
+    for (const ws of this.sockets.values()) {
+      try {
+        ws.close();
+      } catch {}
+    }
+    this.sockets.clear();
+    this.queues.clear();
+  }
+
   subscribe(
     filters: Filter[],
     onEvent: (ev: NostrEvent) => void,

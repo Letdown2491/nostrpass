@@ -39,6 +39,11 @@ export default function App() {
 
   const poolRef = React.useRef<RelayPool | null>(null);
   const idleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingOps = React.useRef<Set<Promise<unknown>>>(new Set());
+  const trackOp = React.useCallback((p: Promise<unknown>) => {
+    pendingOps.current.add(p);
+    return p.finally(() => pendingOps.current.delete(p));
+  }, []);
   const npub = React.useMemo(() => (pubkey ? toNpub(pubkey) : ""), [pubkey]);
   const overallStatus = React.useMemo(() => {
     const statuses = Object.values(relayStatuses);
@@ -49,26 +54,28 @@ export default function App() {
   }, [relayStatuses]);
 
   const storeEvent = React.useCallback(
-    async (ev: NostrEvent, pending: 1 | 0) => {
+    (ev: NostrEvent, pending: 1 | 0) => {
       const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
       const contentHash = bytesToHex(sha256(utf8ToBytes(ev.content)));
-      await db.transaction("rw", db.events, db.index, async () => {
-        await db.events.put({
-          id: ev.id,
-          d,
-          created_at: ev.created_at,
-          content: ev.content,
-          raw: ev,
-          pending,
-        });
-        await db.index.put({
-          d,
-          updatedAt: ev.created_at,
-          contentHash,
-        });
-      });
+      return trackOp(
+        db.transaction("rw", db.events, db.index, async () => {
+          await db.events.put({
+            id: ev.id,
+            d,
+            created_at: ev.created_at,
+            content: ev.content,
+            raw: ev,
+            pending,
+          });
+          await db.index.put({
+            d,
+            updatedAt: ev.created_at,
+            contentHash,
+          });
+        }),
+      );
     },
-    [],
+    [trackOp],
   );
 
   const clearDb = React.useCallback(async () => {
@@ -76,28 +83,31 @@ export default function App() {
     await db.index.clear();
   }, []);
 
-  const publishPending = React.useCallback(async () => {
-    if (!poolRef.current) return;
-    const pending = await db.events.where("pending").equals(1).toArray();
-    const results = await Promise.allSettled(
-      pending.map(async (p) => {
-        const res = await poolRef.current!.publish(p.raw as NostrEvent);
-        return { p, res };
-      }),
-    );
-    await Promise.all(
-      results
-        .filter(
-          (
-            r,
-          ): r is PromiseFulfilledResult<{
-            p: (typeof pending)[number];
-            res: Awaited<ReturnType<RelayPool["publish"]>>;
-          }> => r.status === "fulfilled" && !!r.value.res?.successes?.length,
-        )
-        .map((r) => db.events.update(r.value.p.id, { pending: 0 })),
-    );
-  }, []);
+  const publishPending = React.useCallback(() => {
+    const p = (async () => {
+      if (!poolRef.current) return;
+      const pending = await db.events.where("pending").equals(1).toArray();
+      const results = await Promise.allSettled(
+        pending.map(async (p) => {
+          const res = await poolRef.current!.publish(p.raw as NostrEvent);
+          return { p, res };
+        }),
+      );
+      await Promise.all(
+        results
+          .filter(
+            (
+              r,
+            ): r is PromiseFulfilledResult<{
+              p: (typeof pending)[number];
+              res: Awaited<ReturnType<RelayPool["publish"]>>;
+            }> => r.status === "fulfilled" && !!r.value.res?.successes?.length,
+          )
+          .map((r) => db.events.update(r.value.p.id, { pending: 0 })),
+      );
+    })();
+    return trackOp(p);
+  }, [trackOp]);
 
   const handleUnlocked = React.useCallback(async () => {
     const cached = await db.events.orderBy("created_at").toArray();
@@ -248,50 +258,67 @@ export default function App() {
   React.useEffect(() => {
     if (prevUnlocked.current && !unlocked) {
       setEvents([]);
+      const pool = poolRef.current;
       poolRef.current = null;
+      (async () => {
+        pool?.close();
+        await Promise.allSettled([...pendingOps.current]);
+        await clearDb();
+      })();
     }
     prevUnlocked.current = unlocked;
-  }, [unlocked]);
+  }, [unlocked, clearDb]);
 
   const prevPubkey = React.useRef<string | null>(pubkey);
   React.useEffect(() => {
     if (prevPubkey.current && !pubkey) {
-      clearDb();
       setEvents([]);
+      const pool = poolRef.current;
       poolRef.current = null;
+      (async () => {
+        pool?.close();
+        await Promise.allSettled([...pendingOps.current]);
+        await clearDb();
+      })();
     }
     prevPubkey.current = pubkey;
   }, [pubkey, clearDb]);
 
-  const publish = async (
+  const publish = (
     ev: NostrEvent,
   ): Promise<{ successes: string[]; failures: Record<string, string> }> => {
-    if (!poolRef.current && pubkey && unlocked) startSub(pubkey);
+    const p = (async () => {
+      if (!poolRef.current && pubkey && unlocked) startSub(pubkey);
 
-    // Optimistic replace by d
-    const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-    setEvents((prev) => {
-      const i = prev.findIndex(
-        (p) => (p.tags.find((t) => t[0] === "d")?.[1] ?? "") === d,
-      );
-      if (i >= 0) {
-        const copy = prev.slice();
-        copy[i] = ev;
-        return copy;
-      }
-      return [...prev, ev];
-    });
-    await storeEvent(ev, 1);
+      // Optimistic replace by d
+      const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+      setEvents((prev) => {
+        const i = prev.findIndex(
+          (p) => (p.tags.find((t) => t[0] === "d")?.[1] ?? "") === d,
+        );
+        if (i >= 0) {
+          const copy = prev.slice();
+          copy[i] = ev;
+          return copy;
+        }
+        return [...prev, ev];
+      });
+      await storeEvent(ev, 1);
 
-    try {
-      const res = await poolRef.current?.publish(ev);
-      if (res?.successes?.length) {
-        await db.events.update(ev.id, { pending: 0 });
+      try {
+        const res = await poolRef.current?.publish(ev);
+        if (res?.successes?.length) {
+          await db.events.update(ev.id, { pending: 0 });
+        }
+        return res ?? { successes: [], failures: {} };
+      } catch (e) {
+        return { successes: [], failures: { _error: String(e) } };
       }
-      return res ?? { successes: [], failures: {} };
-    } catch (e) {
-      return { successes: [], failures: { _error: String(e) } };
-    }
+    })();
+    return trackOp(p) as Promise<{
+      successes: string[];
+      failures: Record<string, string>;
+    }>;
   };
 
   // Save settings (build + publish settings event)
