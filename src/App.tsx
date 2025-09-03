@@ -38,6 +38,13 @@ export default function App() {
   const poolRef = React.useRef<RelayPool | null>(null);
   const idleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const npub = React.useMemo(() => (pubkey ? toNpub(pubkey) : ""), [pubkey]);
+  const overallStatus = React.useMemo(() => {
+    const statuses = Object.values(relayStatuses);
+    if (statuses.includes("open")) return "open";
+    if (statuses.includes("connecting")) return "connecting";
+    if (statuses.includes("error")) return "error";
+    return "closed";
+  }, [relayStatuses]);
 
   const storeEvent = React.useCallback(
     async (ev: NostrEvent, pending: 1 | 0) => {
@@ -359,7 +366,13 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3">
           {/* Avatar + name + muted npub */}
-          {npub && <ProfileBadge npub={npub} profile={profile} />}
+          {npub && (
+            <ProfileBadge
+              npub={npub}
+              profile={profile}
+              status={overallStatus}
+            />
+          )}
         </div>
       </header>
 

@@ -7,14 +7,22 @@ export default function ProfileBadge({
   npub,
   profile,
   size = 40,
+  status = "open",
 }: {
   npub: string;
   profile: Profile | null;
   size?: number;
+  status?: "open" | "connecting" | "closed" | "error";
 }) {
   const [imgOk, setImgOk] = React.useState(true);
   const src = avatarFrom(profile);
   const name = bestName(profile, shortNpub(npub));
+  const ringClass =
+    status === "open"
+      ? "ring-2 ring-green-500"
+      : status === "connecting"
+        ? "ring-2 ring-yellow-500"
+        : "ring-2 ring-red-500";
 
   const dim = `${size}px`;
 
@@ -27,7 +35,7 @@ export default function ProfileBadge({
         </div>
       </div>
       <div
-        className="rounded-full overflow-hidden bg-slate-800 flex items-center justify-center shrink-0"
+        className={`rounded-full overflow-hidden bg-slate-800 flex items-center justify-center shrink-0 ${ringClass}`}
         style={{ width: dim, height: dim }}
       >
         {src && imgOk ? (
