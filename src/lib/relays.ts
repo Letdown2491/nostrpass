@@ -39,6 +39,16 @@ export class RelayPool extends EventTarget {
   connect() {
     for (const url of this.urls) {
       if (this.sockets.has(url)) continue;
+      try {
+        const { protocol } = new URL(url);
+        if (protocol !== "wss:") {
+          this.logger.warn("[relay] insecure url skipped", url);
+          continue;
+        }
+      } catch (e) {
+        this.logger.warn("[relay] invalid url skipped", url, e);
+        continue;
+      }
       const ws = new WebSocket(url);
       this.queues.set(url, []);
 

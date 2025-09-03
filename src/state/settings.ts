@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autolockSec: 300,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
-  relays: ["wss://premium.primal.net"],
+  relays: ["wss://relay.primal.net"],
   categories: [
     "Communication",
     "Development",
@@ -64,7 +64,13 @@ export function parseSettingsEvent(ev: NostrEvent): Settings | null {
           )
         : DEFAULT_SETTINGS.categories,
       relays: Array.isArray(parsed?.relays)
-        ? Array.from(new Set(parsed.relays))
+        ? Array.from(
+            new Set(
+              parsed.relays
+                .map((r: any) => (typeof r === "string" ? r.trim() : ""))
+                .filter((r: string) => r.startsWith("wss://")),
+            ),
+          )
         : DEFAULT_SETTINGS.relays,
     } as Settings;
   } catch {
@@ -79,7 +85,13 @@ export async function buildSettingsEvent(
 ): Promise<NostrEvent> {
   const sanitized: Settings = {
     ...settings,
-    relays: Array.from(new Set(settings.relays)),
+    relays: Array.from(
+      new Set(
+        settings.relays
+          .map((r) => r.trim())
+          .filter((r) => r.startsWith("wss://")),
+      ),
+    ),
   };
   const unsigned = {
     kind: 30078,

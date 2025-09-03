@@ -49,10 +49,14 @@ export default function SettingsModal({
     setSaving(true);
     setStatus({ ok: null, text: "" });
     try {
-      const sanitized = {
-        ...form,
-        relays: form.relays.filter((r) => r.trim().length > 0),
-      };
+      const relays = form.relays
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0);
+      const invalid = relays.find((r) => !r.startsWith("wss://"));
+      if (invalid) {
+        throw new Error(`Invalid relay URL: ${invalid}`);
+      }
+      const sanitized = { ...form, relays };
       await onSave(sanitized);
       setStatus({ ok: true, text: "Saved" });
       onClose();
@@ -95,6 +99,8 @@ export default function SettingsModal({
                     <span className={`w-3 h-3 rounded-full ${color}`} />
                     <input
                       className="w-full"
+                      pattern="^wss://.*"
+                      title="Relay URLs must start with wss://"
                       value={r}
                       onChange={(e) =>
                         setForm((s) => {
