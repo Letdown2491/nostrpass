@@ -30,23 +30,29 @@ export default function NewLoginModal({
     text: string;
   }>({ ok: null, text: "" });
 
+  const handleClose = React.useCallback(() => {
+    form.reset();
+    onClose();
+  }, [form, onClose]);
+
+  React.useEffect(() => {
+    if (!open) form.reset();
+  }, [open]);
+
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, handleClose]);
 
   if (!open) return null;
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
-  const submit = async (
-    values: LoginFormValues,
-    { reset }: { reset: () => void },
-  ) => {
+  const submit = async (values: LoginFormValues) => {
     if (submitting) return;
     setSubmitting(true);
     setStatus({ ok: null, text: "" });
@@ -79,12 +85,10 @@ export default function NewLoginModal({
       const failCount = Object.keys(res?.failures || {}).length;
       if (okCount > 0) {
         setStatus({ ok: true, text: "Saved" });
-        reset();
-        onClose();
+        handleClose();
       } else if (failCount === 0 || !navigator.onLine) {
         setStatus({ ok: true, text: "Saved locally (pending)" });
-        reset();
-        onClose();
+        handleClose();
       } else {
         setStatus({
           ok: false,
@@ -94,8 +98,7 @@ export default function NewLoginModal({
     } catch (err: any) {
       if (!navigator.onLine) {
         setStatus({ ok: true, text: "Saved locally (pending)" });
-        reset();
-        onClose();
+        handleClose();
       } else {
         setStatus({ ok: false, text: err?.message || "Failed to publish" });
       }
@@ -107,7 +110,7 @@ export default function NewLoginModal({
   return (
     <div
       className="fixed inset-0 z-40 flex items-center justify-center"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div className="absolute inset-0 bg-black/60" />
       <div
@@ -123,7 +126,7 @@ export default function NewLoginModal({
           submitting={submitting}
           status={status}
           onSubmit={submit}
-          onCancel={onClose}
+          onCancel={handleClose}
         />
       </div>
     </div>

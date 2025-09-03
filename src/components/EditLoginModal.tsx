@@ -36,14 +36,23 @@ export default function EditLoginModal({
     text: string;
   }>({ ok: null, text: "" });
 
+  const handleClose = React.useCallback(() => {
+    form.reset();
+    onClose();
+  }, [form, onClose]);
+
+  React.useEffect(() => {
+    if (!open) form.reset();
+  }, [open]);
+
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, handleClose]);
 
   const lastUpdated = React.useMemo(() => {
     if (!item) return null;
@@ -84,10 +93,10 @@ export default function EditLoginModal({
       const failCount = Object.keys(res?.failures || {}).length;
       if (okCount > 0) {
         setStatus({ ok: true, text: "Saved" });
-        onClose();
+        handleClose();
       } else if (failCount === 0 || !navigator.onLine) {
         setStatus({ ok: true, text: "Saved locally (pending)" });
-        onClose();
+        handleClose();
       } else {
         setStatus({
           ok: false,
@@ -99,7 +108,7 @@ export default function EditLoginModal({
     } catch (err: any) {
       if (!navigator.onLine) {
         setStatus({ ok: true, text: "Saved locally (pending)" });
-        onClose();
+        handleClose();
       } else {
         setStatus({ ok: false, text: err?.message || "Failed to publish" });
       }
@@ -111,7 +120,7 @@ export default function EditLoginModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div className="absolute inset-0 bg-black/60" />
       <div
@@ -134,7 +143,7 @@ export default function EditLoginModal({
           submitting={submitting}
           status={status}
           onSubmit={submit}
-          onCancel={onClose}
+          onCancel={handleClose}
         />
       </div>
     </div>
