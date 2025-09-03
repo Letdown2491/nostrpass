@@ -152,7 +152,7 @@ export function useLoginForm({
     const secret = scannedSecret || totpSecret;
     if (!secret) return;
     try {
-      await navigator.clipboard.writeText(secret);
+      await copyText(secret, settings.clipboardClearSec ?? undefined);
       alert("TOTP secret copied to clipboard");
     } catch (e) {
       console.error("Failed to copy TOTP secret", e);
