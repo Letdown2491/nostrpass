@@ -2,13 +2,13 @@ import React from "react";
 import { unlockVault } from "../state/vault";
 import { LogoIcon } from "./Icons";
 
-export default function Unlock({
-  onUnlocked,
-}: {
-  onUnlocked: (passphrase: string) => void;
-}) {
+export default function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
   const [pw, setPw] = React.useState("");
   const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => {
+    return () => setPw("");
+  }, []);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -16,6 +16,7 @@ export default function Unlock({
       await unlockVault(pw);
       onUnlocked();
     } finally {
+      setPw("");
       setBusy(false);
     }
   };
@@ -25,7 +26,7 @@ export default function Unlock({
       className="max-w-md mx-auto mt-24 space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/60"
     >
       <h2 className="text-3xl font-semibold inline-flex">
-        <LogoIcon height="34" width="36" />
+        <LogoIcon height={34} width={36} />
         NostrPass
       </h2>
       <input
