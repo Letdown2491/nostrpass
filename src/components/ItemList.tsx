@@ -42,7 +42,10 @@ export default function ItemList({
   const [rows, setRows] = React.useState<ItemRow[]>([]);
   const [pending, setPending] = React.useState(0);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
-  const [editItem, setEditItem] = React.useState<ItemRow | null>(null);
+  const [editItem, _setEditItem] = React.useState<ItemRow | null>(null);
+  const setEditItem = React.useCallback((it: ItemRow | null) => {
+    _setEditItem(it);
+  }, []);
 
   const { query, setQuery, visible, toggleSort, sortIndicator } =
     useItemSorting(rows, settings);
@@ -228,56 +231,63 @@ export default function ItemList({
     };
   }, [rows, counter]);
 
-  const flagBusy = (id: string, v: boolean) =>
+  const flagBusy = React.useCallback((id: string, v: boolean) => {
     setBusy((b) => ({ ...b, [id]: v }));
+  }, []);
 
-  const deleteItem = async (it: ItemRow) => {
-    if (
-      !confirm(
-        "Delete this item? This publishes a new version marked as deleted.",
+  const deleteItem = React.useCallback(
+    async (it: ItemRow) => {
+      if (
+        !confirm(
+          "Delete this item? This publishes a new version marked as deleted.",
+        )
       )
-    )
-      return;
-    try {
-      flagBusy(it.id, true);
-      const { d: _d, id, ...rest } = it;
-      const body: LoginItem = {
-        id,
-        ...rest,
-        category: rest.category,
-        deleted: true,
-        updatedAt: Math.floor(Date.now() / 1000),
-        version: (rest.version ?? 0) + 1,
-      };
-      const ev = await buildItemEvent(id, body, pubkey);
-      const res = await onPublish(ev);
-      if (!res || res.successes.length === 0)
-        alert("Delete publish did not get an OK from any relay.");
-    } finally {
-      flagBusy(it.id, false);
-    }
-  };
+        return;
+      try {
+        flagBusy(it.id, true);
+        const { d: _d, id, ...rest } = it;
+        const body: LoginItem = {
+          id,
+          ...rest,
+          category: rest.category,
+          deleted: true,
+          updatedAt: Math.floor(Date.now() / 1000),
+          version: (rest.version ?? 0) + 1,
+        };
+        const ev = await buildItemEvent(id, body, pubkey);
+        const res = await onPublish(ev);
+        if (!res || res.successes.length === 0)
+          alert("Delete publish did not get an OK from any relay.");
+      } finally {
+        flagBusy(it.id, false);
+      }
+    },
+    [flagBusy, onPublish, pubkey],
+  );
 
-  const restoreItem = async (it: ItemRow) => {
-    try {
-      flagBusy(it.id, true);
-      const { d: _d, id, ...rest } = it;
-      const body: LoginItem = {
-        id,
-        ...rest,
-        category: rest.category,
-        deleted: false,
-        updatedAt: Math.floor(Date.now() / 1000),
-        version: (rest.version ?? 0) + 1,
-      };
-      const ev = await buildItemEvent(id, body, pubkey);
-      const res = await onPublish(ev);
-      if (!res || res.successes.length === 0)
-        alert("Restore publish did not get an OK from any relay.");
-    } finally {
-      flagBusy(it.id, false);
-    }
-  };
+  const restoreItem = React.useCallback(
+    async (it: ItemRow) => {
+      try {
+        flagBusy(it.id, true);
+        const { d: _d, id, ...rest } = it;
+        const body: LoginItem = {
+          id,
+          ...rest,
+          category: rest.category,
+          deleted: false,
+          updatedAt: Math.floor(Date.now() / 1000),
+          version: (rest.version ?? 0) + 1,
+        };
+        const ev = await buildItemEvent(id, body, pubkey);
+        const res = await onPublish(ev);
+        if (!res || res.successes.length === 0)
+          alert("Restore publish did not get an OK from any relay.");
+      } finally {
+        flagBusy(it.id, false);
+      }
+    },
+    [flagBusy, onPublish, pubkey],
+  );
 
   return (
     <div className="space-y-3">
@@ -336,9 +346,9 @@ export default function ItemList({
                   code={code}
                   settings={settings}
                   isBusy={isBusy}
-                  onEdit={() => setEditItem(it)}
-                  onDelete={() => deleteItem(it)}
-                  onRestore={() => restoreItem(it)}
+                  onEdit={setEditItem}
+                  onDelete={deleteItem}
+                  onRestore={restoreItem}
                   badFavicons={badFavicons}
                   setBadFavicons={setBadFavicons}
                   faviconRetry={faviconRetry}

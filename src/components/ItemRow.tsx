@@ -9,9 +9,9 @@ type Props = {
   code: string;
   settings: Settings;
   isBusy: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-  onRestore: () => void;
+  onEdit: (item: any) => void;
+  onDelete: (item: any) => void;
+  onRestore: (item: any) => void;
   badFavicons: Record<string, boolean>;
   setBadFavicons: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   faviconRetry: number;
@@ -29,7 +29,7 @@ function faviconUrlForHost(host: string, settings: Settings): string {
   return `https://icons.duckduckgo.com/ip3/${host}.ico`;
 }
 
-export default function ItemRow({
+const ItemRow = React.memo(function ItemRow({
   item,
   code,
   settings,
@@ -127,9 +127,9 @@ export default function ItemRow({
                 } else if (action === "copy-token" && code && code !== "—") {
                   copyText(code, settings.clipboardClearSec);
                 } else if (action === "edit") {
-                  onEdit();
+                  onEdit(item);
                 } else if (action === "delete") {
-                  onDelete();
+                  onDelete(item);
                 }
                 e.target.value = "";
               }}
@@ -153,7 +153,7 @@ export default function ItemRow({
           ) : (
             <button
               className="px-2 py-1 rounded border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40 disabled:opacity-50"
-              onClick={onRestore}
+              onClick={() => onRestore(item)}
               disabled={isBusy}
               title="Restore"
               aria-label="Restore item"
@@ -166,4 +166,6 @@ export default function ItemRow({
       </td>
     </tr>
   );
-}
+});
+
+export default ItemRow;
