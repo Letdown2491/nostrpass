@@ -201,8 +201,8 @@ export default function App() {
       ];
       pool.subscribe(
         settingsFilters,
-        (ev) => {
-          const parsed = parseSettingsEvent(ev);
+        async (ev) => {
+          const parsed = await parseSettingsEvent(ev);
           if (parsed) {
             setSettings((cur) => ({ ...cur, ...parsed }));
           }

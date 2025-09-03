@@ -1,4 +1,10 @@
-import type { NostrEvent } from "../lib/types";
+import type { Envelope, NostrEvent } from "../lib/types";
+import {
+  decryptEnvelope,
+  deriveVaultKey,
+  encryptEnvelope,
+} from "../lib/crypto";
+import { ensureKdf, getPassphrase } from "./vault";
 
 export const SETTINGS_D = "com.you.pm:settings:v1";
 
@@ -44,41 +50,61 @@ export const DEFAULT_SETTINGS: Settings = {
   ],
 };
 
-export function parseSettingsEvent(ev: NostrEvent): Settings | null {
+function sanitize(parsed: any): Settings {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...parsed,
+    defaultSort: {
+      ...DEFAULT_SETTINGS.defaultSort,
+      ...(parsed?.defaultSort ?? {}),
+    },
+    favicon: {
+      ...DEFAULT_SETTINGS.favicon,
+      ...(parsed?.favicon ?? {}),
+    },
+    categories: Array.isArray(parsed?.categories)
+      ? Array.from(
+          new Set([...DEFAULT_SETTINGS.categories, ...parsed.categories]),
+        )
+      : DEFAULT_SETTINGS.categories,
+    relays: Array.isArray(parsed?.relays)
+      ? Array.from(
+          new Set(
+            parsed.relays
+              .map((r: any) => (typeof r === "string" ? r.trim() : ""))
+              .filter((r: string) => r.startsWith("wss://")),
+          ),
+        )
+      : DEFAULT_SETTINGS.relays,
+  } as Settings;
+}
+
+export async function parseSettingsEvent(
+  ev: NostrEvent,
+): Promise<Settings | null> {
   try {
-    const parsed = JSON.parse(ev.content || "{}");
-    return {
-      ...DEFAULT_SETTINGS,
-      ...parsed,
-      defaultSort: {
-        ...DEFAULT_SETTINGS.defaultSort,
-        ...(parsed?.defaultSort ?? {}),
-      },
-      favicon: {
-        ...DEFAULT_SETTINGS.favicon,
-        ...(parsed?.favicon ?? {}),
-      },
-      categories: Array.isArray(parsed?.categories)
-        ? Array.from(
-            new Set([...DEFAULT_SETTINGS.categories, ...parsed.categories]),
-          )
-        : DEFAULT_SETTINGS.categories,
-      relays: Array.isArray(parsed?.relays)
-        ? Array.from(
-            new Set(
-              parsed.relays
-                .map((r: any) => (typeof r === "string" ? r.trim() : ""))
-                .filter((r: string) => r.startsWith("wss://")),
-            ),
-          )
-        : DEFAULT_SETTINGS.relays,
-    } as Settings;
+    const content = ev.content || "{}";
+    const parsed = JSON.parse(content);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "v" in parsed &&
+      "ct" in parsed &&
+      "alg" in parsed
+    ) {
+      const pw = getPassphrase();
+      if (!pw) return null;
+      const pwStr = new TextDecoder().decode(pw);
+      const decrypted = await decryptEnvelope(parsed as Envelope, pwStr);
+      return sanitize(decrypted);
+    }
+    return sanitize(parsed);
   } catch {
     return null;
   }
 }
 
-// Build a plaintext app-data event for settings (NIP-33 parameterized replaceable).
+// Build an app-data event for settings (NIP-33 parameterized replaceable).
 export async function buildSettingsEvent(
   pubkey: string,
   settings: Settings,
@@ -93,11 +119,20 @@ export async function buildSettingsEvent(
       ),
     ),
   };
+  const pw = getPassphrase();
+  if (!pw) throw new Error("Locked: no passphrase in memory");
+  const pwStr = new TextDecoder().decode(pw);
+  const env = await encryptEnvelope(
+    sanitized,
+    await deriveVaultKey(pwStr, ensureKdf()),
+    ensureKdf(),
+  );
+  const content = JSON.stringify(env);
   const unsigned = {
     kind: 30078,
     created_at: Math.floor(Date.now() / 1000),
     tags: [["d", SETTINGS_D]],
-    content: JSON.stringify(sanitized),
+    content,
     pubkey,
   };
 
