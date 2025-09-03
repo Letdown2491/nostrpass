@@ -7,7 +7,7 @@ import {
   NS_ITEM_PREFIX,
 } from "../state/vault";
 import EditLoginModal from "./EditLoginModal";
-import { totpFromBase32 } from "../lib/totp";
+import { totpFromBase32, clearTotpCache } from "../lib/totp";
 import type { Settings } from "../state/settings";
 import { NewLoginIcon, SettingsIcon } from "./Icons";
 import ItemRow from "./ItemRow";
@@ -78,6 +78,13 @@ export default function ItemList({
   const otpCache = React.useRef<
     Record<string, { counter: number; code: string; secret: string }>
   >({});
+
+  React.useEffect(() => {
+    return () => {
+      otpCache.current = {};
+      clearTotpCache();
+    };
+  }, []);
 
   // cache hosts with broken favicons to avoid repeated network attempts
   const [badFavicons, setBadFavicons] = React.useState<Record<string, boolean>>(
