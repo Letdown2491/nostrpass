@@ -6,14 +6,14 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 - **End-to-end encryption**: Client-side passphrase → Argon2id key derivation → XChaCha20-Poly1305 AEAD.
 - **Per-item addressing**: Each record is a **kind 30078** (parameterized-replaceable) event keyed by a `d` tag.
 - **Fast UI**: New/Edit via modals, searchable & sortable table, optional favicons.
-- **Copy helpers**: Click to copy **username**, **password**, or **2FA token** (with optional auto-clear).
-- **TOTP support**: Store a Base32 **2FA Secret Key**; live 30-second codes are shown in the table.
-- **Offline support**: currently the app does support offline actions (add/edit/delete) which will sync back to the selected relays after internet access is restore.
-- **Settings**: Synced and local device settings (favicons, blur 2FA, etc).
+- **Copy helpers**: Click to copy **username**, **password**, or **2FA token**.
+- **TOTP support**: Store a Base32 **2FA Secret Key**.
+- **Offline support**: currently the app does support offline actions (add/edit/delete) which will sync back to the selected relays after internet access is restored.
+- **Settings**: Synced and local device settings.
 
 ## How it works (short)
 - **Identity & signing**: A NIP-07 signer provides your pubkey (npub) and signs events.
-**Storage & sync**: Items are **kind 30078** events with a stable `["d","com.you.pm:item:<opaque>"]`. The newest per `d` wins on relays.
+- **Storage & sync**: Items are **kind 30078** events with a stable `["d","com.you.pm:item:<opaque>"]`. The newest per `d` wins on relays.
 - **Encryption**: Your passphrase derives a key (Argon2id). Item content is encrypted with XChaCha20-Poly1305. KDF params are stored alongside ciphertext so another device can decrypt after you unlock.
 
 ## Quick start
