@@ -36,18 +36,13 @@ function getArgon2Worker(): Worker {
   return argon2Worker;
 }
 
-export function terminateArgon2Worker() {
-  argon2Worker?.terminate();
-  argon2Worker = null;
-}
-
 export async function initSodium() {
   if ((sodium as any)._sodium_initialized) return;
   await sodium.ready;
   (sodium as any)._sodium_initialized = true;
 }
 
-export function randomBytes(len: number): Uint8Array {
+function randomBytes(len: number): Uint8Array {
   return sodium.randombytes_buf(len);
 }
 
@@ -71,7 +66,7 @@ export function toB64(u8: Uint8Array): string {
   return sodium.to_base64(u8, sodium.base64_variants.ORIGINAL);
 }
 
-export function fromB64(b: string): Uint8Array {
+function fromB64(b: string): Uint8Array {
   return sodium.from_base64(b, sodium.base64_variants.ORIGINAL);
 }
 
@@ -93,10 +88,7 @@ export async function deriveVaultKey(
   });
 }
 
-export function deriveItemKey(
-  vaultKey: Uint8Array,
-  itemSalt_b64: string,
-): Uint8Array {
+function deriveItemKey(vaultKey: Uint8Array, itemSalt_b64: string): Uint8Array {
   const salt = fromB64(itemSalt_b64);
   const info = utf8ToBytes("item-subkeys-v1");
   return hkdf(sha256, vaultKey, salt, info, 32);
