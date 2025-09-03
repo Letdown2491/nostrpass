@@ -86,20 +86,24 @@ export async function parseSettingsEvent(
     const content = ev.content || "{}";
     const parsed = JSON.parse(content);
     if (
-      parsed &&
-      typeof parsed === "object" &&
-      "v" in parsed &&
-      "ct" in parsed &&
-      "alg" in parsed
+      !(
+        parsed &&
+        typeof parsed === "object" &&
+        "v" in parsed &&
+        "ct" in parsed &&
+        "alg" in parsed
+      )
     ) {
-      const pw = getPassphrase();
-      if (!pw) return null;
-      const pwStr = new TextDecoder().decode(pw);
-      const decrypted = await decryptEnvelope(parsed as Envelope, pwStr);
-      return sanitize(decrypted);
+      console.warn("Invalid settings envelope: missing fields");
+      return null;
     }
-    return sanitize(parsed);
-  } catch {
+    const pw = getPassphrase();
+    if (!pw) return null;
+    const pwStr = new TextDecoder().decode(pw);
+    const decrypted = await decryptEnvelope(parsed as Envelope, pwStr);
+    return sanitize(decrypted);
+  } catch (err) {
+    console.warn("Failed to parse settings event", err);
     return null;
   }
 }
