@@ -10,7 +10,7 @@ import {
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 
-export type Session = {
+type Session = {
   pubkey: string | null;
   passphrase: Uint8Array | null;
   kdf: KdfParams | null;
@@ -18,7 +18,7 @@ export type Session = {
   vaultKeyReady: boolean;
 };
 
-export const session: Session = {
+const session: Session = {
   pubkey: null,
   passphrase: null,
   kdf: null,
@@ -57,7 +57,7 @@ export function lockVault(): void {
   session.vaultKeyReady = false;
 }
 
-export function parseEnvelope(content: string): Envelope | null {
+function parseEnvelope(content: string): Envelope | null {
   try {
     return JSON.parse(content);
   } catch {
@@ -65,26 +65,9 @@ export function parseEnvelope(content: string): Envelope | null {
   }
 }
 
-// Explicit decrypt (takes passphrase argument)
-export async function decryptItemContent(content: string, passphrase: string) {
-  const env = parseEnvelope(content);
-  if (!env) throw new Error("Invalid envelope");
-  const pwBytes = utf8ToBytes(passphrase);
-  // Clear passphrase after converting to bytes to minimize exposure
-  passphrase = "";
-  try {
-    return await decryptEnvelope(env, pwBytes);
-  } finally {
-    pwBytes.fill(0);
-  }
-}
-
 // Convenience getters
 export function getPassphrase(): Uint8Array | null {
   return session.passphrase;
-}
-export function getPubkey(): string | null {
-  return session.pubkey;
 }
 
 // Decrypt using in-memory session passphrase
