@@ -85,18 +85,14 @@ export default function SettingsModal({
               {form.relays.map((r, idx) => {
                 const trimmed = r.trim();
                 const status = relayStatuses[trimmed];
-                let color = "text-slate-500";
-                if (status === "open") color = "text-green-400";
-                else if (status === "connecting") color = "text-yellow-400";
-                else if (status === "error") color = "text-rose-400";
-                else if (status === "closed") color = "text-slate-400";
+                let color = "bg-slate-500";
+                if (status === "open") color = "bg-green-400";
+                else if (status === "connecting") color = "bg-yellow-400";
+                else if (status === "closed" || status === "error")
+                  color = "bg-rose-400";
                 return (
                   <div key={idx} className="flex gap-2 items-center">
-                    {status && (
-                      <span className={`text-xs capitalize ${color}`}>
-                        {status}
-                      </span>
-                    )}
+                    <span className={`w-3 h-3 rounded-full ${color}`} />
                     <input
                       className="w-full"
                       value={r}
@@ -111,7 +107,7 @@ export default function SettingsModal({
                     />
                     <button
                       type="button"
-                      className="text-xs text-rose-400"
+                      className="text-xs text-rose-400 hover:bg-rose-400/40"
                       onClick={() =>
                         setForm((s) => ({
                           ...s,
@@ -126,7 +122,7 @@ export default function SettingsModal({
               })}
               <button
                 type="button"
-                className="px-2 py-1 rounded-lg border border-slate-600 text-xs hover:bg-slate-600/10"
+                className="px-5 py-1 w-48 rounded-lg border border-blue-600 text-sm hover:bg-blue-600/40"
                 onClick={() =>
                   setForm((s) => ({ ...s, relays: [...s.relays, ""] }))
                 }
@@ -352,7 +348,7 @@ export default function SettingsModal({
           <div className="flex items-center justify-end gap-2 pt-2">
             <button
               type="button"
-              className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/10 disabled:opacity-50"
+              className="px-3 py-1 rounded-lg border border-slate-600 hover:bg-slate-600/50 disabled:opacity-50"
               onClick={onClose}
               disabled={saving}
             >
@@ -360,7 +356,7 @@ export default function SettingsModal({
             </button>
             <button
               type="submit"
-              className="px-3 py-1 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/10 disabled:opacity-50"
+              className="px-3 py-1 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40 disabled:opacity-50"
               disabled={saving}
             >
               {saving ? "Saving…" : "Save"}
