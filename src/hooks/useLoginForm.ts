@@ -1,6 +1,7 @@
 import React from "react";
 import type { Settings } from "../state/settings";
 import { generatePassword } from "../lib/crypto";
+import { copyText } from "../lib/clipboard";
 import { passwordStrength } from "check-password-strength";
 
 export interface LoginFormValues {
@@ -141,9 +142,7 @@ export function useLoginForm({
     const normalized = secret.replace(/[^A-Z2-7]/gi, "").toUpperCase();
     if (normalized === lastSecretRef.current) return;
     lastSecretRef.current = normalized;
-    navigator.clipboard
-      .writeText(normalized)
-      .catch((e) => console.error("Failed to copy TOTP secret", e));
+    copyText(normalized, settings.clipboardClearSec ?? undefined);
     setScannedSecret(normalized);
     setShowTotpSecret(true);
     setShowScanner(false);
