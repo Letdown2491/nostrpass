@@ -262,12 +262,11 @@ export default function App() {
   const prevUnlocked = React.useRef(unlocked);
   React.useEffect(() => {
     if (prevUnlocked.current && !unlocked) {
-      clearDb();
       setEvents([]);
       poolRef.current = null;
     }
     prevUnlocked.current = unlocked;
-  }, [unlocked, clearDb]);
+  }, [unlocked]);
 
   const prevPubkey = React.useRef<string | null>(pubkey);
   React.useEffect(() => {
