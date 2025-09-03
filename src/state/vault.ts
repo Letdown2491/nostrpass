@@ -12,7 +12,7 @@ import { utf8ToBytes } from "@noble/hashes/utils";
 
 export type Session = {
   pubkey: string | null;
-  passphrase: string | null;
+  passphrase: Uint8Array | null;
   kdf: KdfParams | null;
   unlocked: boolean;
   vaultKeyReady: boolean;
@@ -40,14 +40,17 @@ export function ensureKdf(): KdfParams {
 }
 
 export async function unlockVault(passphrase: string): Promise<void> {
-  session.passphrase = passphrase;
+  session.passphrase = utf8ToBytes(passphrase);
   session.unlocked = true;
   session.vaultKeyReady = true;
   await initSodium();
 }
 
 export function lockVault(): void {
-  session.passphrase = null;
+  if (session.passphrase) {
+    session.passphrase.fill(0);
+    session.passphrase = null;
+  }
   session.unlocked = false;
   session.vaultKeyReady = false;
 }
@@ -68,7 +71,7 @@ export async function decryptItemContent(content: string, passphrase: string) {
 }
 
 // Convenience getters
-export function getPassphrase(): string | null {
+export function getPassphrase(): Uint8Array | null {
   return session.passphrase;
 }
 export function getPubkey(): string | null {
@@ -81,7 +84,8 @@ export async function decryptItemContentUsingSession(content: string) {
   if (!env) throw new Error("Invalid envelope");
   const pw = session.passphrase;
   if (!pw) throw new Error("Locked: no passphrase in memory");
-  return await decryptEnvelope(env, pw);
+  const pwStr = new TextDecoder().decode(pw);
+  return await decryptEnvelope(env, pwStr);
 }
 
 export const NS_ITEM_PREFIX = "com.you.pm:item:";
@@ -96,9 +100,11 @@ export async function buildItemEvent(
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
+  if (!session.passphrase) throw new Error("Locked: no passphrase in memory");
+  const pwStr = new TextDecoder().decode(session.passphrase);
   const env = await encryptEnvelope(
     body,
-    await deriveVaultKey(session.passphrase!, ensureKdf()),
+    await deriveVaultKey(pwStr, ensureKdf()),
     ensureKdf(),
   );
   const ev = {
