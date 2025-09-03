@@ -21,8 +21,10 @@ type Props = {
 function faviconUrlForHost(host: string, settings: Settings): string {
   if (settings.favicon?.source === "custom") {
     const base = (settings.favicon.customBase || "").trim();
-    const normalized = base ? base.replace(/\/?$/, "/") : "";
-    return `${normalized}${host}.ico`;
+    if (base && base.toLowerCase().startsWith("https://")) {
+      const normalized = base.replace(/\/?$/, "/");
+      return `${normalized}${host}.ico`;
+    }
   }
   return `https://icons.duckduckgo.com/ip3/${host}.ico`;
 }

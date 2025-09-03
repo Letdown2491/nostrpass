@@ -56,7 +56,17 @@ export default function SettingsModal({
       if (invalid) {
         throw new Error(`Invalid relay URL: ${invalid}`);
       }
-      const sanitized = { ...form, relays };
+      let favicon = form.favicon;
+      if (favicon.source === "custom") {
+        const base = (favicon.customBase || "").trim();
+        if (!base.toLowerCase().startsWith("https://")) {
+          throw new Error("Custom favicon base must start with https://");
+        }
+        favicon = { ...favicon, customBase: base };
+      } else {
+        favicon = { ...favicon, customBase: undefined };
+      }
+      const sanitized = { ...form, relays, favicon };
       await onSave(sanitized);
       setStatus({ ok: true, text: "Saved" });
       onClose();
