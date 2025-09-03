@@ -11,7 +11,9 @@ import type { NostrEvent } from "./lib/types";
 import { toNpub } from "./lib/npub";
 import { parseProfileEvent, type Profile } from "./lib/profile";
 import { db } from "./lib/db";
-import { decryptItemContentUsingSession, lockVault } from "./state/vault";
+import { lockVault } from "./state/vault";
+import { sha256 } from "@noble/hashes/sha256";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils";
 import {
   DEFAULT_SETTINGS,
   SETTINGS_D,
@@ -49,12 +51,7 @@ export default function App() {
   const storeEvent = React.useCallback(
     async (ev: NostrEvent, pending: 1 | 0) => {
       const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-      let body: any;
-      try {
-        body = await decryptItemContentUsingSession(ev.content);
-      } catch {
-        body = null;
-      }
+      const contentHash = bytesToHex(sha256(utf8ToBytes(ev.content)));
       await db.transaction("rw", db.events, db.index, async () => {
         await db.events.put({
           id: ev.id,
@@ -64,23 +61,11 @@ export default function App() {
           raw: ev,
           pending,
         });
-        if (body) {
-          await db.index.put({
-            d,
-            version: body.version ?? 0,
-            updatedAt: body.updatedAt ?? ev.created_at,
-            type: body.type ?? "",
-            title: body.title,
-          });
-        } else {
-          await db.index.put({
-            d,
-            version: 0,
-            updatedAt: ev.created_at,
-            type: "",
-            title: undefined,
-          });
-        }
+        await db.index.put({
+          d,
+          updatedAt: ev.created_at,
+          contentHash,
+        });
       });
     },
     [],

@@ -11,10 +11,8 @@ export interface StoredEvent {
 
 export interface ItemIndex {
   d: string;
-  version: number;
   updatedAt: number;
-  type: string;
-  title?: string;
+  contentHash: string;
 }
 
 export class VaultDB extends Dexie {
@@ -30,6 +28,10 @@ export class VaultDB extends Dexie {
     this.version(2).stores({
       events: "id, d, created_at, pending",
       index: "d, updatedAt, version",
+    });
+    this.version(3).stores({
+      events: "id, d, created_at, pending",
+      index: "d, updatedAt, contentHash",
     });
   }
 }
