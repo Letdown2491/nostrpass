@@ -37,9 +37,8 @@ export default function ItemEditor({
       password,
       category: "",
     };
-    const d = `com.you.pm:item:${item.id}`;
     try {
-      const ev = await buildItemEvent(d, item, pubkey);
+      const ev = await buildItemEvent(item.id, item, pubkey);
       const res = await onPublish(ev);
       const okCount = res?.successes?.length || 0;
       const failCount = Object.keys(res?.failures || {}).length;

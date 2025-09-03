@@ -4,6 +4,7 @@ import {
   decryptItemContentUsingSession,
   getPassphrase,
   buildItemEvent,
+  NS_ITEM_PREFIX,
 } from "../state/vault";
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32 } from "../lib/totp";
@@ -13,7 +14,6 @@ import ItemRow from "./ItemRow";
 import ItemTableHeader from "./ItemTableHeader";
 import useItemSorting from "../hooks/useItemSorting";
 
-const NS_ITEM_PREFIX = "com.you.pm:item:"; // only show items in our item namespace
 const STEP = 30; // 30-second TOTP step
 
 export default function ItemList({
@@ -129,7 +129,31 @@ export default function ItemList({
         .map((r) => r.value)
         .filter((r): r is ItemRow => !!r);
 
-      setRows(decoded);
+      const map = new Map<string, ItemRow>();
+      for (const it of decoded) {
+        const key = it.id ?? it.d;
+        const existing = map.get(key);
+        if (!existing) {
+          map.set(key, it);
+          continue;
+        }
+        const [existingUpdatedAt, existingVersion] = [
+          existing.updatedAt ?? 0,
+          existing.version ?? 0,
+        ];
+        const [nextUpdatedAt, nextVersion] = [
+          it.updatedAt ?? 0,
+          it.version ?? 0,
+        ];
+        if (
+          nextUpdatedAt > existingUpdatedAt ||
+          (nextUpdatedAt === existingUpdatedAt && nextVersion > existingVersion)
+        ) {
+          map.set(key, it);
+        }
+      }
+
+      setRows(Array.from(map.values()));
       setPending(0);
     })();
     return () => {
@@ -209,15 +233,16 @@ export default function ItemList({
       return;
     try {
       flagBusy(it.id, true);
-      const { d, ...rest } = it;
+      const { d: _d, id, ...rest } = it;
       const body: LoginItem = {
+        id,
         ...rest,
         category: rest.category,
         deleted: true,
         updatedAt: Math.floor(Date.now() / 1000),
         version: (rest.version ?? 0) + 1,
       };
-      const ev = await buildItemEvent(d, body, pubkey);
+      const ev = await buildItemEvent(id, body, pubkey);
       const res = await onPublish(ev);
       if (!res || res.successes.length === 0)
         alert("Delete publish did not get an OK from any relay.");
@@ -229,15 +254,16 @@ export default function ItemList({
   const restoreItem = async (it: ItemRow) => {
     try {
       flagBusy(it.id, true);
-      const { d, ...rest } = it;
+      const { d: _d, id, ...rest } = it;
       const body: LoginItem = {
+        id,
         ...rest,
         category: rest.category,
         deleted: false,
         updatedAt: Math.floor(Date.now() / 1000),
         version: (rest.version ?? 0) + 1,
       };
-      const ev = await buildItemEvent(d, body, pubkey);
+      const ev = await buildItemEvent(id, body, pubkey);
       const res = await onPublish(ev);
       if (!res || res.successes.length === 0)
         alert("Restore publish did not get an OK from any relay.");

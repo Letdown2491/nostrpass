@@ -52,7 +52,6 @@ export default function NewLoginModal({
     setStatus({ ok: null, text: "" });
 
     const id = uuidv4();
-    const d = `com.you.pm:item:${id}`;
     const now = Math.floor(Date.now() / 1000);
     const chosenCategory = settings.categories.includes(values.category)
       ? values.category
@@ -74,7 +73,7 @@ export default function NewLoginModal({
     };
 
     try {
-      const ev = await buildItemEvent(d, item, pubkey);
+      const ev = await buildItemEvent(id, item, pubkey);
       const res = await onPublish(ev);
       const okCount = res?.successes?.length || 0;
       const failCount = Object.keys(res?.failures || {}).length;

@@ -5,7 +5,10 @@ import {
   deriveVaultKey,
   encryptEnvelope,
   initSodium,
+  toB64,
 } from "../lib/crypto";
+import { sha256 } from "@noble/hashes/sha256";
+import { utf8ToBytes } from "@noble/hashes/utils";
 
 export type Session = {
   pubkey: string | null;
@@ -81,9 +84,15 @@ export async function decryptItemContentUsingSession(content: string) {
   return await decryptEnvelope(env, pw);
 }
 
-// Build a signed kind-30078 event at address `d` with encrypted body
+export const NS_ITEM_PREFIX = "com.you.pm:item:";
+
+function opaqueIdentifier(id: string): string {
+  return NS_ITEM_PREFIX + toB64(sha256(utf8ToBytes(id)));
+}
+
+// Build a signed kind-30078 event for `id` with encrypted body
 export async function buildItemEvent(
-  d: string,
+  id: string,
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
@@ -95,7 +104,7 @@ export async function buildItemEvent(
   const ev = {
     kind: 30078,
     created_at: Math.floor(Date.now() / 1000),
-    tags: [["d", d]],
+    tags: [["d", opaqueIdentifier(id)]],
     content: JSON.stringify(env),
     pubkey,
   } as any;

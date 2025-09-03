@@ -13,7 +13,7 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 
 ## How it works (short)
 - **Identity & signing**: A NIP-07 signer provides your pubkey (npub) and signs events.
-- **Storage & sync**: Items are **kind 30078** events with a stable `["d","com.you.pm:item:<uuid>"]`. The newest per `d` wins on relays.
+**Storage & sync**: Items are **kind 30078** events with a stable `["d","com.you.pm:item:<opaque>"]`. The newest per `d` wins on relays.
 - **Encryption**: Your passphrase derives a key (Argon2id). Item content is encrypted with XChaCha20-Poly1305. KDF params are stored alongside ciphertext so another device can decrypt after you unlock.
 
 ## Quick start
@@ -63,4 +63,4 @@ pnpm build              # or: npm run build / yarn build
 - **Decryption errors**: Confirm you’ve unlocked with the same passphrase used to create your items. If you rotate your passphrase, old items can’t decrypt without the original.
 
 ## Security note
-This project is a starter/experimental app. Review the code, threat model, and your relay trust before storing highly sensitive data. Use at your own risk.
+This project is a starter/experimental app. Review the code, threat model, and your relay trust before storing highly sensitive data. Use at your own risk. All event metadata, including tags such as the `d` identifier, is visible to relays. Avoid placing secrets or personal data in metadata fields. Future protocol enhancements may allow envelope-level encryption of additional fields; this project will evaluate such features if they become available.

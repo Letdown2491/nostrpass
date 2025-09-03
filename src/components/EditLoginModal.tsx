@@ -62,7 +62,7 @@ export default function EditLoginModal({
     setStatus({ ok: null, text: "" });
 
     const now = Math.floor(Date.now() / 1000);
-    const { category: _unused, ...rest } = item;
+    const { category: _unused, d: _d, ...rest } = item;
     const body = {
       ...rest,
       title: values.title,
@@ -78,7 +78,7 @@ export default function EditLoginModal({
     };
 
     try {
-      const ev = await buildItemEvent(item.d, body, pubkey);
+      const ev = await buildItemEvent(item.id, body, pubkey);
       const res = await onPublish(ev);
       const okCount = res?.successes?.length || 0;
       const failCount = Object.keys(res?.failures || {}).length;
