@@ -1,6 +1,6 @@
 import Dexie, { Table } from "dexie";
 
-export interface StoredEvent {
+interface StoredEvent {
   id: string;
   d: string;
   created_at: number;
@@ -9,13 +9,13 @@ export interface StoredEvent {
   pending?: 1 | 0;
 }
 
-export interface ItemIndex {
+interface ItemIndex {
   d: string;
   updatedAt: number;
   contentHash: string;
 }
 
-export class VaultDB extends Dexie {
+class VaultDB extends Dexie {
   events!: Table<StoredEvent, string>; // id
   index!: Table<ItemIndex, string>; // d
 
