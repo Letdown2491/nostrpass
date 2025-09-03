@@ -117,6 +117,5 @@ export async function buildItemEvent(
 
   // @ts-ignore
   const signed = await window.nostr.signEvent(ev);
-  console.log("[signEvent] signed", signed);
   return signed as NostrEvent;
 }
