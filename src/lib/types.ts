@@ -6,35 +6,19 @@ export type KdfParams = {
   p: number;
 };
 
-export type VaultHeaderPayload = {
-  v: 1;
-  app: "pm.nostr.vault";
-  createdAt: number;
-  updatedAt: number;
-  kdf: KdfParams;
-  hkdf: { info: "item-subkeys-v1" };
-  policy: { autolockSec: number; clipboardClearSec: number };
-  relays: string[];
-};
-
-export interface ItemBase {
+export interface LoginItem {
   id: string;
-  type: "login" | "note" | "apiKey" | "card" | "identity" | "totp";
+  type: "login";
   title: string;
-  tags: string[];
+  tags?: string[];
   category: string;
   createdAt: number;
   updatedAt: number;
   version: number;
   deleted?: boolean;
-}
-
-export interface LoginItem extends ItemBase {
-  type: "login";
   site: string;
   username: string;
   password: string;
-  category: string;
   url?: string;
   notes?: string;
   totpSecret?: string;
