@@ -57,6 +57,23 @@ export default function App() {
     (ev: NostrEvent, pending: 1 | 0) => {
       const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
       const contentHash = bytesToHex(sha256(utf8ToBytes(ev.content)));
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(ev.content);
+      } catch {
+        console.debug("skipping invalid envelope: parse error");
+        return Promise.resolve();
+      }
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        typeof (parsed as any).v !== "number" ||
+        typeof (parsed as any).ct !== "string" ||
+        typeof (parsed as any).alg !== "string"
+      ) {
+        console.debug("skipping invalid envelope: missing fields");
+        return Promise.resolve();
+      }
       return trackOp(
         db.transaction("rw", db.events, db.index, async () => {
           await db.events.put({
@@ -156,6 +173,7 @@ export default function App() {
             await storeEvent(ev, 0);
           } catch (err) {
             console.warn("storeEvent failed", err);
+            return;
           }
           // Keep newest per d
           setEvents((prev) => {
@@ -373,7 +391,7 @@ export default function App() {
     <div className="max-w-5xl mx-auto p-4 space-y-6">
       <header className="flex items-center justify-between">
         <div className="text-3xl font-semibold inline-flex">
-          <LogoIcon height="34" width="36" /> NostrPass
+          <LogoIcon height={34} width={36} /> NostrPass
         </div>
         <div className="flex items-center gap-3">
           {/* Avatar + name + muted npub */}
