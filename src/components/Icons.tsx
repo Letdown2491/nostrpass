@@ -54,10 +54,10 @@ export const OfflineFavicon: React.FC<React.SVGProps<SVGSVGElement>> = (
   </svg>
 );
 
-export interface RestoreIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 24 px */
+interface IconProps extends React.SVGProps<SVGSVGElement> {
+  /** Width / height of the icon. */
   size?: number | string;
-  /** Stroke colour – defaults to `currentColor` so it inherits the surrounding text colour */
+  /** Stroke or fill colour – defaults to `currentColor`. */
   color?: string;
 }
 
@@ -65,7 +65,7 @@ export const RestoreIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: RestoreIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -85,10 +85,8 @@ export const RestoreIcon = ({
 export const SpinnerIcon = ({
   size = 32,
   color = "currentColor",
-}: {
-  size?: number | string;
-  color?: string;
-}) => (
+  ...svgProps
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -97,6 +95,7 @@ export const SpinnerIcon = ({
     stroke={color}
     className="animate-spin"
     aria-hidden="true"
+    {...svgProps}
   >
     <g fill="none" fillRule="evenodd">
       <g transform="translate(1 1)" strokeWidth="2">
@@ -116,18 +115,11 @@ export const SpinnerIcon = ({
   </svg>
 );
 
-export interface ShowIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 24 px */
-  size?: number | string;
-  /** Stroke colour – defaults to `currentColor` so it inherits the surrounding text colour */
-  color?: string;
-}
-
 export const ShowIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: ShowIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -147,13 +139,6 @@ export const ShowIcon = ({
   </svg>
 );
 
-export interface HideIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 24 px */
-  size?: number | string;
-  /** Stroke colour – defaults to `currentColor` so it inherits the surrounding text colour */
-  color?: string;
-}
-
 /**
  * An “eye‑slash” (hide) icon – eyeball with a diagonal line.
  *
@@ -165,7 +150,7 @@ export const HideIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: HideIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -187,18 +172,11 @@ export const HideIcon = ({
   </svg>
 );
 
-export interface GenerateIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 32 px (feel free to override). */
-  size?: number | string;
-  /** Fill colour – defaults to `currentColor` so it inherits the surrounding text colour. */
-  color?: string;
-}
-
 export const GenerateIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: GenerateIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -275,13 +253,6 @@ export const GenerateIcon = ({
   </svg>
 );
 
-export interface ScanCodeIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 32 px. */
-  size?: number | string;
-  /** Stroke colour – defaults to `currentColor` so it inherits surrounding text colour. */
-  color?: string;
-}
-
 /**
  * Camera‑shaped “scan” icon.
  *
@@ -293,7 +264,7 @@ export const ScanCodeIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: ScanCodeIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -319,18 +290,11 @@ export const ScanCodeIcon = ({
   </svg>
 );
 
-export interface SettingsIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 32 px. */
-  size?: number | string;
-  /** Stroke colour – defaults to `currentColor` so it inherits surrounding text colour. */
-  color?: string;
-}
-
 export const SettingsIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: SettingsIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -350,18 +314,11 @@ export const SettingsIcon = ({
   </svg>
 );
 
-export interface NewLoginIconProps extends React.SVGProps<SVGSVGElement> {
-  /** Width / height of the icon – defaults to 32 px. */
-  size?: number | string;
-  /** Stroke colour – defaults to `currentColor` so it inherits surrounding text colour. */
-  color?: string;
-}
-
 export const NewLoginIcon = ({
   size = 32,
   color = "currentColor",
   ...svgProps
-}: NewLoginIconProps) => (
+}: IconProps) => (
   <svg
     width={size}
     height={size}
