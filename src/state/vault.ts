@@ -67,7 +67,12 @@ export function parseEnvelope(content: string): Envelope | null {
 export async function decryptItemContent(content: string, passphrase: string) {
   const env = parseEnvelope(content);
   if (!env) throw new Error("Invalid envelope");
-  return await decryptEnvelope(env, passphrase);
+  const pwBytes = utf8ToBytes(passphrase);
+  try {
+    return await decryptEnvelope(env, pwBytes);
+  } finally {
+    pwBytes.fill(0);
+  }
 }
 
 // Convenience getters
@@ -84,8 +89,7 @@ export async function decryptItemContentUsingSession(content: string) {
   if (!env) throw new Error("Invalid envelope");
   const pw = session.passphrase;
   if (!pw) throw new Error("Locked: no passphrase in memory");
-  const pwStr = new TextDecoder().decode(pw);
-  return await decryptEnvelope(env, pwStr);
+  return await decryptEnvelope(env, pw);
 }
 
 export const NS_ITEM_PREFIX = "com.you.pm:item:";
@@ -100,13 +104,12 @@ export async function buildItemEvent(
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
-  if (!session.passphrase) throw new Error("Locked: no passphrase in memory");
-  const pwStr = new TextDecoder().decode(session.passphrase);
-  const env = await encryptEnvelope(
-    body,
-    await deriveVaultKey(pwStr, ensureKdf()),
-    ensureKdf(),
-  );
+  const pw = session.passphrase;
+  if (!pw) throw new Error("Locked: no passphrase in memory");
+  const kdf = ensureKdf();
+  const vaultKey = await deriveVaultKey(pw, kdf);
+  const env = await encryptEnvelope(body, vaultKey, kdf);
+  vaultKey.fill(0);
   const ev = {
     kind: 30078,
     created_at: Math.floor(Date.now() / 1000),

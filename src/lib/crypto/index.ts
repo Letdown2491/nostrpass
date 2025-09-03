@@ -76,17 +76,13 @@ export function fromB64(b: string): Uint8Array {
 }
 
 export async function deriveVaultKey(
-  passphrase: string,
+  passphrase: Uint8Array,
   kdf: KdfParams,
 ): Promise<Uint8Array> {
   const worker = getArgon2Worker();
   const salt = fromB64(kdf.salt_b64);
-  // Convert passphrase to bytes and transfer to worker securely
-  const passphraseBytes = utf8ToBytes(passphrase);
-  // Drop reference to original string as soon as possible
-  passphrase = "";
-  const transferablePassphrase = passphraseBytes.slice();
-  passphraseBytes.fill(0);
+  // Copy passphrase to transfer to worker securely
+  const transferablePassphrase = passphrase.slice();
   return new Promise((resolve, reject) => {
     const id = nextMessageId++;
     pending.set(id, { resolve, reject });
@@ -140,7 +136,7 @@ export async function encryptEnvelope(
 
 export async function decryptEnvelope(
   envelope: Envelope,
-  passphrase: string,
+  passphrase: Uint8Array,
 ): Promise<any> {
   await initSodium();
   const vaultKey = await deriveVaultKey(passphrase, envelope.kdf);
@@ -148,14 +144,19 @@ export async function decryptEnvelope(
   const ad = envelope.ad ? new TextEncoder().encode(envelope.ad) : null;
   const ct = fromB64(envelope.ct);
   const nonce = fromB64(envelope.nonce);
-  const pt = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
-    null,
-    ct,
-    ad ?? undefined,
-    nonce,
-    itemKey,
-  );
-  return JSON.parse(new TextDecoder().decode(pt));
+  try {
+    const pt = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+      null,
+      ct,
+      ad ?? undefined,
+      nonce,
+      itemKey,
+    );
+    return JSON.parse(new TextDecoder().decode(pt));
+  } finally {
+    vaultKey.fill(0);
+    itemKey.fill(0);
+  }
 }
 
 export function defaultKdf(): KdfParams {

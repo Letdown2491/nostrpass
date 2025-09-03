@@ -99,8 +99,7 @@ export async function parseSettingsEvent(
     }
     const pw = getPassphrase();
     if (!pw) return null;
-    const pwStr = new TextDecoder().decode(pw);
-    const decrypted = await decryptEnvelope(parsed as Envelope, pwStr);
+    const decrypted = await decryptEnvelope(parsed as Envelope, pw);
     return sanitize(decrypted);
   } catch (err) {
     console.warn("Failed to parse settings event", err);
@@ -125,12 +124,10 @@ export async function buildSettingsEvent(
   };
   const pw = getPassphrase();
   if (!pw) throw new Error("Locked: no passphrase in memory");
-  const pwStr = new TextDecoder().decode(pw);
-  const env = await encryptEnvelope(
-    sanitized,
-    await deriveVaultKey(pwStr, ensureKdf()),
-    ensureKdf(),
-  );
+  const kdf = ensureKdf();
+  const vaultKey = await deriveVaultKey(pw, kdf);
+  const env = await encryptEnvelope(sanitized, vaultKey, kdf);
+  vaultKey.fill(0);
   const content = JSON.stringify(env);
   const unsigned = {
     kind: 30078,
