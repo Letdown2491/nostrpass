@@ -81,10 +81,19 @@ export async function deriveVaultKey(
 ): Promise<Uint8Array> {
   const worker = getArgon2Worker();
   const salt = fromB64(kdf.salt_b64);
+  // Convert passphrase to bytes and transfer to worker securely
+  const passphraseBytes = utf8ToBytes(passphrase);
+  // Drop reference to original string as soon as possible
+  passphrase = "";
+  const transferablePassphrase = passphraseBytes.slice();
+  passphraseBytes.fill(0);
   return new Promise((resolve, reject) => {
     const id = nextMessageId++;
     pending.set(id, { resolve, reject });
-    worker.postMessage({ id, passphrase, kdf, salt }, [salt.buffer]);
+    worker.postMessage({ id, passphrase: transferablePassphrase, kdf, salt }, [
+      transferablePassphrase.buffer,
+      salt.buffer,
+    ]);
   });
 }
 

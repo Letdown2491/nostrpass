@@ -3,7 +3,7 @@ import { argon2id } from "hash-wasm";
 self.onmessage = async (event: MessageEvent) => {
   const { id, passphrase, kdf, salt } = event.data as {
     id: number;
-    passphrase: string;
+    passphrase: Uint8Array;
     kdf: { m: number; t: number; p: number };
     salt: ArrayBuffer;
   };
@@ -17,9 +17,11 @@ self.onmessage = async (event: MessageEvent) => {
       hashLength: 32,
       outputType: "binary",
     });
+    passphrase.fill(0);
     // Transfer the underlying buffer for efficiency
     (self as any).postMessage({ id, key }, [key.buffer]);
   } catch (error: any) {
+    passphrase.fill(0);
     (self as any).postMessage({ id, error: error?.message ?? String(error) });
   }
 };
