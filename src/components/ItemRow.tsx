@@ -87,7 +87,7 @@ const ItemRow = React.memo(function ItemRow({
 
       <td className="py-2 px-2">{item.category || "Uncategorized"}</td>
 
-      <td className="py-2 px-2">
+      <td className="py-2 px-2 hidden sm:block">
         {siteHref ? (
           <a
             href={siteHref}
