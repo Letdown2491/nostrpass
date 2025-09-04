@@ -80,28 +80,10 @@ export default function NewLoginModal({
 
     try {
       const ev = await buildItemEvent(id, item, pubkey);
-      const res = await onPublish(ev);
-      const okCount = res?.successes?.length || 0;
-      const failCount = Object.keys(res?.failures || {}).length;
-      if (okCount > 0) {
-        setStatus({ ok: true, text: "Saved" });
-        handleClose();
-      } else if (failCount === 0 || !navigator.onLine) {
-        setStatus({ ok: true, text: "Saved locally (pending)" });
-        handleClose();
-      } else {
-        setStatus({
-          ok: false,
-          text: `No relay accepted write (${failCount} failed)`,
-        });
-      }
+      onPublish(ev).catch((err) => console.error("Failed to publish", err));
+      handleClose();
     } catch (err: any) {
-      if (!navigator.onLine) {
-        setStatus({ ok: true, text: "Saved locally (pending)" });
-        handleClose();
-      } else {
-        setStatus({ ok: false, text: err?.message || "Failed to publish" });
-      }
+      setStatus({ ok: false, text: err?.message || "Failed to publish" });
     } finally {
       setSubmitting(false);
     }
