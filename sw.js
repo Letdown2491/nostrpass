@@ -33,6 +33,28 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  const isIcon =
+    event.request.destination === "image" && url.pathname.endsWith(".ico");
+
+  if (isIcon) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        try {
+          const response = await fetch(event.request);
+          if (response.ok) cache.put(event.request, response.clone());
+          return response;
+        } catch {
+          return new Response("", { status: 404 });
+        }
+      }),
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {

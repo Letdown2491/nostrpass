@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
     "Development",
     "Education",
     "Entertainment",
+    "Finance",
     "Household",
     "Personal",
     "Shopping",

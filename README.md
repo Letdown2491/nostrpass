@@ -33,7 +33,7 @@ docker run --rm -p 8080:3000 nostrpass
 # then open the printed URL (usually http://localhost:5173)
 ```
 
-### Install & run (NPM)
+### Install & run (PNPM)
 ```bash
 # clone the repo
 git clone https://github.com/Letdown2491/nostrpass
@@ -42,8 +42,10 @@ cd nostrpass
 pnpm install            # or: npm install / yarn
 # start the dev server
 pnpm dev                # or: npm run dev / yarn dev
-# then open the printed URL (usually http://localhost:5173)
+# then open the printed URL (usually http://localhost:4173)
 pnpm build              # or: npm run build / yarn build
+# then start the production server
+pnpm preview
 ```
 
 ### Using the app
