@@ -47,6 +47,13 @@ const ItemRow = React.memo(function ItemRow({
   const displayHost = host || item.site;
   const showFavicon = settings.showFavicons && !!host && !badFavicons[host];
 
+  const lastUpdated = React.useMemo(() => {
+    if (!item) return null;
+    const sec = item.updatedAt ?? item.createdAt;
+    if (!sec) return null;
+    return new Date(sec * 1000).toLocaleString();
+  }, [item]);
+
   const trunc = (enabled: boolean) =>
     enabled
       ? "block max-w-[40ch] overflow-hidden text-ellipsis whitespace-nowrap"
@@ -85,9 +92,11 @@ const ItemRow = React.memo(function ItemRow({
         </span>
       </td>
 
-      <td className="py-2 px-2">{item.category || "Uncategorized"}</td>
+      <td className="py-2 px-2 hidden sm:table-cell">
+        {item.category || "Uncategorized"}
+      </td>
 
-      <td className="py-2 px-2 hidden sm:block">
+      <td className="py-2 px-2 hidden sm:table-cell">
         {siteHref ? (
           <a
             href={siteHref}
@@ -113,11 +122,15 @@ const ItemRow = React.memo(function ItemRow({
         )}
       </td>
 
+      <td className="py-2 px-2 text-right hidden sm:table-cell">
+        {lastUpdated}
+      </td>
+
       <td className="py-2 px-2">
         <div className="flex items-center gap-2 justify-end">
           {!item.deleted ? (
             <select
-              className="px-2 py-1 rounded border border-slate-600 disabled:opacity-50"
+              className="w-24 text-center rounded border border-slate-600 disabled:opacity-50 "
               onChange={(e) => {
                 const action = e.target.value;
                 if (action === "copy-username" && item.username) {
@@ -145,7 +158,7 @@ const ItemRow = React.memo(function ItemRow({
                 <option value="copy-token">Copy Token</option>
               )}
               <option value="edit">Edit</option>
-              <option disabled>────────</option>
+              <option disabled>────────────</option>
               <option value="delete" className="text-rose-400">
                 Delete
               </option>

@@ -30,7 +30,7 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   showDeleted: false,
-  showFavicons: true,
+  showFavicons: false,
   truncateFields: true,
   clipboardClearSec: 30,
   autolockSec: 300,
