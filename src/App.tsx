@@ -61,7 +61,11 @@ export default function App() {
       try {
         parsed = JSON.parse(ev.content);
       } catch {
-        console.debug("skipping invalid envelope: parse error");
+        console.debug(
+          "skipping invalid envelope: parse error",
+          ev.id,
+          ev.content,
+        );
         return Promise.resolve();
       }
       if (
@@ -71,7 +75,7 @@ export default function App() {
         typeof (parsed as any).ct !== "string" ||
         typeof (parsed as any).alg !== "string"
       ) {
-        console.debug("skipping invalid envelope: missing fields");
+        console.debug("skipping invalid envelope: missing fields", ev.id);
         return Promise.resolve();
       }
       return trackOp(
@@ -125,6 +129,19 @@ export default function App() {
     })();
     return trackOp(p);
   }, [trackOp]);
+
+  React.useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data && event.data.type === "sync") {
+        publishPending();
+      }
+    };
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener("message", handler);
+    }
+    return () =>
+      navigator.serviceWorker?.removeEventListener("message", handler);
+  }, [publishPending]);
 
   const handleUnlocked = React.useCallback(async () => {
     const cached = await db.events.orderBy("created_at").toArray();
@@ -322,6 +339,17 @@ export default function App() {
         return [...prev, ev];
       });
       await storeEvent(ev, 1);
+
+      if ("serviceWorker" in navigator && "SyncManager" in window) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          if ("sync" in reg) {
+            await (reg as any).sync.register("sync-pending");
+          }
+        } catch (err) {
+          console.debug("background sync registration failed", err);
+        }
+      }
 
       try {
         const res = await poolRef.current?.publish(ev);

@@ -4,22 +4,22 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+# Optional: ignore other lock files you never use
+# yarn.lock
+# pnpm-lock.yaml
 
 # ----- Build output ---------------------------------------------------------
 dist/
 build/
-# If you use a custom output folder, add it here
 
 # ----- Dependency caches ----------------------------------------------------
-/.pnp
+.pnp
 .pnp.js
 
 # ----- Environment variables ------------------------------------------------
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+# (explicitly list any you want to keep versioned, e.g. .env.example)
 
 # ----- IDE / editor specific -----------------------------------------------
 # VS Code
@@ -29,19 +29,22 @@ build/
 *.iml
 
 # ----- OS generated files ---------------------------------------------------
-.DS_Store          # macOS
-Thumbs.db          # Windows
+.DS_Store
+.AppleDouble
+.Spotlight-V100
+.Trashes
+Thumbs.db
 ehthumbs.db
 Desktop.ini
 
 # ----- Miscellaneous --------------------------------------------------------
-coverage/          # Jest coverage reports
-*.log              # Generic log files
+*.log               # generic log files
+coverage/
 .sass-cache/
 .cache/
 .tmp/
 tmp/
-*.tmp
+*.tsbuildinfo
 
 # ----- Storybook (if used) -------------------------------------------------
 .storybook/
@@ -53,7 +56,7 @@ cypress/videos/
 cypress/reports/
 
 # ----- Testing artifacts ----------------------------------------------------
-__tests__/output/
+tests/**/output/
 jest.config.js
 jest.setup.js
 
@@ -61,5 +64,8 @@ jest.setup.js
 public/build/
 public/static/
 
-# ----- Misc build artefacts -------------------------------------------------
-*.tsbuildinfo
+# ----- Optional extras -------------------------------------------------------
+# npm package tarballs
+*.tgz
+# VS Code extensions (if you want to keep them out)
+.vscode/extensions/

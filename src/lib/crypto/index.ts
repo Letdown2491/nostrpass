@@ -140,7 +140,7 @@ export async function decryptEnvelope(
     const pt = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
       null,
       ct,
-      ad ?? undefined,
+      ad,
       nonce,
       itemKey,
     );
@@ -164,7 +164,7 @@ export async function decryptEnvelopeWithVaultKey(
     const pt = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
       null,
       ct,
-      ad ?? undefined,
+      ad,
       nonce,
       itemKey,
     );

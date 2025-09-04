@@ -134,11 +134,17 @@ const ItemRow = React.memo(function ItemRow({
               onChange={(e) => {
                 const action = e.target.value;
                 if (action === "copy-username" && item.username) {
-                  copyText(item.username, settings.clipboardClearSec);
+                  copyText(
+                    item.username,
+                    settings.clipboardClearSec ?? undefined,
+                  );
                 } else if (action === "copy-password" && item.password) {
-                  copyPassword(item.password, settings.clipboardClearSec);
+                  copyPassword(
+                    item.password,
+                    settings.clipboardClearSec ?? undefined,
+                  );
                 } else if (action === "copy-token" && code && code !== "—") {
-                  copyText(code, settings.clipboardClearSec);
+                  copyText(code, settings.clipboardClearSec ?? undefined);
                 } else if (action === "edit") {
                   onEdit(item);
                 } else if (action === "delete") {

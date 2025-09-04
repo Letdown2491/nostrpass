@@ -18,7 +18,7 @@ export default function Login({
   return (
     <div className="max-w-md mx-auto mt-24 space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/60">
       <h1 className="text-3xl font-semibold inline-flex">
-        <LogoIcon height="34" width="36" /> NostrPass
+        <LogoIcon height={36} width={36} /> NostrPass
       </h1>
       <p className="text-sm text-slate-400">
         Welcome to NostrPass, a Nostr-enabled password manager.

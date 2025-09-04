@@ -52,7 +52,9 @@ export default function SettingsModal({
       const relays = form.relays
         .map((r) => r.trim())
         .filter((r) => r.length > 0);
-      const invalid = relays.find((r) => !r.startsWith("wss://"));
+      const invalid = relays.find(
+        (r) => !r.startsWith("wss://") && r !== "ws://localhost:3355",
+      );
       if (invalid) {
         throw new Error(`Invalid relay URL: ${invalid}`);
       }
@@ -109,8 +111,8 @@ export default function SettingsModal({
                     <span className={`w-3 h-3 rounded-full ${color}`} />
                     <input
                       className="w-full"
-                      pattern="^wss://.*"
-                      title="Relay URLs must start with wss://"
+                      pattern="^(wss://.*|ws://localhost:3355)$"
+                      title="Relay URLs must start with wss:// or be ws://localhost:3355"
                       value={r}
                       onChange={(e) =>
                         setForm((s) => {

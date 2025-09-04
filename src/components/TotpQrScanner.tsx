@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 export default function TotpQrScanner({
   onScan,
@@ -17,8 +17,8 @@ export default function TotpQrScanner({
   React.useEffect(() => {
     let stream: MediaStream | null = null;
     let detector: any;
-    let reader: BrowserMultiFormatReader | null = null;
-    let controls: IScannerControls | null = null;
+    let reader: any = null;
+    let controls: any = null;
     let active = true;
     const maxFrames = 300;
     let frameCount = 0;

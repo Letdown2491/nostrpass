@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Password manager icon">
+  <rect x="4" y="4" width="56" height="56" rx="8" ry="8" fill="none" />
+  <rect x="18" y="28" width="28" height="24" rx="4" ry="4" fill="#575FCF" />
+  <path d="M32 20c-6.627 0-12 5.373-12 12v4h4v-4c0-4.418 3.582-8 8-8s8 3.582 8 8v4h4v-4c0-6.627-5.373-12-12-12z" fill="#575FCF" />
+  <circle cx="32" cy="36" r="3" fill="#ECF0F1" />
+  <rect x="31" y="39" width="2" height="6" fill="#ECF0F1" />
+</svg>
