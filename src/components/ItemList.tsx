@@ -40,6 +40,10 @@ export default function ItemList({
   }
 
   const [rows, setRows] = React.useState<ItemRow[]>([]);
+  const activeCount = React.useMemo(
+    () => rows.filter((r) => !r.deleted).length,
+    [rows],
+  );
   const [pending, setPending] = React.useState(0);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
   const [editItem, _setEditItem] = React.useState<ItemRow | null>(null);
@@ -245,6 +249,9 @@ export default function ItemList({
         return;
       try {
         flagBusy(it.id, true);
+        setRows((rs) =>
+          rs.map((r) => (r.id === it.id ? { ...r, deleted: true } : r)),
+        );
         const { d: _d, id, ...rest } = it;
         const body: LoginItem = {
           id,
@@ -269,6 +276,9 @@ export default function ItemList({
     async (it: ItemRow) => {
       try {
         flagBusy(it.id, true);
+        setRows((rs) =>
+          rs.map((r) => (r.id === it.id ? { ...r, deleted: false } : r)),
+        );
         const { d: _d, id, ...rest } = it;
         const body: LoginItem = {
           id,
@@ -293,13 +303,21 @@ export default function ItemList({
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 w-full sm:max-w-md">
-          <input
-            placeholder="Search all logins..."
-            className="w-full h-10 px-3 rounded-lg border border-slate-700 bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald-600"
-            value={inputQuery}
-            onChange={(e) => debouncedSetQuery(e.target.value)}
-            autoComplete="off"
-          />
+          <div className="flex w-full">
+            <span
+              className="flex items-center px-3 border border-slate-700 border-r-0 rounded-l-lg bg-slate-800 text-slate-300"
+              title="Total logins"
+            >
+              {activeCount}
+            </span>
+            <input
+              placeholder="Search all logins..."
+              className="flex-1 w-auto h-10 px-3 border border-slate-700 border-l-0 rounded-l-none rounded-r-lg bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald-600"
+              value={inputQuery}
+              onChange={(e) => debouncedSetQuery(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
           <button
             className="px-3 py-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40"
             onClick={onNewLogin}
