@@ -45,7 +45,11 @@ const ItemRow = React.memo(function ItemRow({
   const siteHref = toHref(item.site);
   const host = hostnameFromSite(item.site);
   const displayHost = host || item.site;
-  const showFavicon = settings.showFavicons && !!host && !badFavicons[host];
+  const faviconUrl = React.useMemo(() => {
+    if (!settings.showFavicons || !host) return null;
+    return faviconUrlForHost(host, settings);
+  }, [settings, host]);
+  const showFavicon = !!faviconUrl && !badFavicons[host!];
 
   const lastUpdated = React.useMemo(() => {
     if (!item) return null;
@@ -66,7 +70,7 @@ const ItemRow = React.memo(function ItemRow({
           {showFavicon ? (
             <img
               key={`${host}-${faviconRetry}`}
-              src={faviconUrlForHost(host!, settings)}
+              src={faviconUrl!}
               alt=""
               aria-hidden="true"
               className="w-5 h-5 rounded-sm bg-slate-800/50"
