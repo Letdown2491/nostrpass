@@ -44,7 +44,8 @@ const ItemRow = React.memo(function ItemRow({
 }: Props) {
   const siteHref = toHref(item.site);
   const host = hostnameFromSite(item.site);
-  const displayHost = host || item.site;
+  const displayHost =
+    host?.replace(/^www\./i, "") ?? item.site?.replace(/^www\./i, "");
   const faviconUrl = React.useMemo(() => {
     if (!settings.showFavicons || !host) return null;
     return faviconUrlForHost(host, settings);

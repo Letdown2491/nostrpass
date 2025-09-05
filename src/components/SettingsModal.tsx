@@ -229,7 +229,7 @@ export default function SettingsModal({
             {/* Favicon source */}
             <div className="text-sm space-y-2">
               <select
-                className="w-full sm:max-w-xs"
+                className="w-full"
                 value={form.favicon.source}
                 onChange={(e) =>
                   setForm((s) => ({
@@ -257,7 +257,7 @@ export default function SettingsModal({
                   }
                 />
               )}
-              <p className="text-xs text-slate-500">
+              <p className="text-xs">
                 Custom base should point to a service that returns{" "}
                 <code>.ico</code> for <em>hostname</em>. The app will request{" "}
                 <code>
@@ -290,7 +290,7 @@ export default function SettingsModal({
                 <input
                   type="number"
                   min={1}
-                  className="w-full sm:max-w-xs"
+                  className="w-full"
                   value={form.clipboardClearSec}
                   onChange={(e) =>
                     setForm((s) => ({
@@ -323,7 +323,7 @@ export default function SettingsModal({
                 <input
                   type="number"
                   min={1}
-                  className="w-full sm:max-w-xs"
+                  className="w-full"
                   value={form.autolockSec}
                   onChange={(e) =>
                     setForm((s) => ({
