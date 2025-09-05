@@ -304,36 +304,22 @@ export default function ItemList({
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 w-full sm:max-w-md">
           <div className="flex w-full">
-            <span
-              className="flex items-center px-3 border border-slate-700 border-r-0 rounded-l-lg bg-slate-800 text-slate-300"
-              title="Total logins"
-            >
-              {activeCount}
-            </span>
             <input
               placeholder="Search all logins..."
-              className="flex-1 w-auto h-10 px-3 border border-slate-700 border-l-0 rounded-l-none rounded-r-lg bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald-600"
+              className="flex-1 w-auto h-10 px-3 border border-slate-700 rounded-l-lg rounded-r-none bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-600"
               value={inputQuery}
               onChange={(e) => debouncedSetQuery(e.target.value)}
               autoComplete="off"
             />
+            <span
+              className="flex items-center px-4 border rounded-l-none rounded-r-lg border-emerald-600 text-emerald-300 hover:bg-emerald-600/40"
+              onClick={onNewLogin}
+              title="Create a new login"
+              type="button"
+            >
+              <NewLoginIcon width="16" height="16" /> {/* Add entry */}
+            </span>
           </div>
-          <button
-            className="px-3 py-3 rounded-lg border border-emerald-600 text-emerald-300 hover:bg-emerald-600/40"
-            onClick={onNewLogin}
-            title="Create a new login"
-            type="button"
-          >
-            <NewLoginIcon width="16" height="16" /> {/* Add entry */}
-          </button>
-          <button
-            className="px-3 py-3 rounded-lg border border-slate-600 hover:bg-slate-600/50"
-            type="button"
-            onClick={onOpenSettings}
-            title="Open settings"
-          >
-            <SettingsIcon width="16" height="16" />
-          </button>
         </div>
       </div>
 

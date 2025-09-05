@@ -418,8 +418,13 @@ export default function App() {
   return (
     <div className="max-w-5xl mx-auto p-4 space-y-6">
       <header className="flex items-center justify-between">
-        <div className="text-3xl font-semibold inline-flex">
-          <LogoIcon height={34} width={36} /> NostrPass
+        <div className="text-4xl font-semibold inline-flex">
+          <LogoIcon
+            height={64}
+            width={64}
+            className="-my-4 -mx-2 hidden sm:block"
+          />
+          NostrPass
         </div>
         <div className="flex items-center gap-3">
           {/* Avatar + name + muted npub */}
@@ -428,6 +433,8 @@ export default function App() {
               npub={npub}
               profile={profile}
               status={overallStatus}
+              onClick={() => setShowSettings(true)}
+              showSettingsIcon
             />
           )}
         </div>

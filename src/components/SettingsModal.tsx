@@ -97,7 +97,7 @@ export default function SettingsModal({
           <fieldset className="space-y-3">
             {/* Relay URLs */}
             <div className="space-y-2 text-sm">
-              <div className="text-slate-400 text-xs">Relay URLs</div>
+              <div className="text-xs">Relay URLs</div>
               {form.relays.map((r, idx) => {
                 const trimmed = r.trim();
                 const status = relayStatuses[trimmed];
@@ -125,7 +125,7 @@ export default function SettingsModal({
                     />
                     <button
                       type="button"
-                      className="text-xs text-rose-400 hover:bg-rose-400/40"
+                      className="text-xs border-rose-400 text-rose-400 hover:bg-rose-400/40"
                       onClick={() =>
                         setForm((s) => ({
                           ...s,
@@ -140,7 +140,7 @@ export default function SettingsModal({
               })}
               <button
                 type="button"
-                className="px-5 py-1 w-48 rounded-lg border border-blue-600 text-sm hover:bg-blue-600/40"
+                className="px-5 py-1 w-full rounded-lg border border-blue-600 text-sm hover:bg-blue-600/40"
                 onClick={() =>
                   setForm((s) => ({ ...s, relays: [...s.relays, ""] }))
                 }
@@ -148,6 +148,71 @@ export default function SettingsModal({
                 Add relay
               </button>
             </div>
+
+            {/* Default sort */}
+            <div className="text-xs">Table sorting options</div>
+            <div className="text-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block">
+                <div className="text-slate-400 text-xs mb-1">
+                  Default sorting key
+                </div>
+                <select
+                  className="w-full"
+                  value={form.defaultSort.key}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      defaultSort: {
+                        ...s.defaultSort,
+                        key: e.target.value as TableSortKey,
+                      },
+                    }))
+                  }
+                >
+                  {SORT_KEYS.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <div className="text-slate-400 text-xs mb-1">
+                  Default sorting direction
+                </div>
+                <select
+                  className="w-full"
+                  value={form.defaultSort.dir}
+                  onChange={(e) =>
+                    setForm((s) => ({
+                      ...s,
+                      defaultSort: {
+                        ...s.defaultSort,
+                        dir: e.target.value as TableSortDir,
+                      },
+                    }))
+                  }
+                >
+                  {SORT_DIRS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            {/* Truncate long fields */}
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.truncateFields}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, truncateFields: e.target.checked }))
+                }
+              />
+              Truncate long titles and site addresses
+            </label>
 
             {/* Favicons on/off */}
             <label className="flex items-center gap-2 text-sm">
@@ -160,14 +225,9 @@ export default function SettingsModal({
               />
               Fetch remote favicons
             </label>
-            <p className="text-xs text-slate-500">
-              Favicons are loaded from a remote service. Disable for stricter
-              privacy.
-            </p>
 
             {/* Favicon source */}
             <div className="text-sm space-y-2">
-              <div className="text-slate-400 text-xs">Favicon source</div>
               <select
                 className="w-full sm:max-w-xs"
                 value={form.favicon.source}
@@ -208,70 +268,6 @@ export default function SettingsModal({
               </p>
             </div>
 
-            {/* Truncate long fields */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.truncateFields}
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, truncateFields: e.target.checked }))
-                }
-              />
-              Truncate long Title/Site with tooltip
-            </label>
-
-            {/* Default sort */}
-            <div className="text-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="block">
-                <div className="text-slate-400 text-xs mb-1">
-                  Default sort key
-                </div>
-                <select
-                  className="w-full"
-                  value={form.defaultSort.key}
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      defaultSort: {
-                        ...s.defaultSort,
-                        key: e.target.value as TableSortKey,
-                      },
-                    }))
-                  }
-                >
-                  {SORT_KEYS.map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <div className="text-slate-400 text-xs mb-1">
-                  Default sort direction
-                </div>
-                <select
-                  className="w-full"
-                  value={form.defaultSort.dir}
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      defaultSort: {
-                        ...s.defaultSort,
-                        dir: e.target.value as TableSortDir,
-                      },
-                    }))
-                  }
-                >
-                  {SORT_DIRS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
             {/* Clipboard clear */}
             <div className="text-sm space-y-2">
               <label className="flex items-center gap-2">
@@ -288,7 +284,7 @@ export default function SettingsModal({
                     }))
                   }
                 />
-                Clear clipboard after X seconds
+                Clear clipboard contents after X seconds
               </label>
               {form.clipboardClearSec !== null && (
                 <input
@@ -304,9 +300,6 @@ export default function SettingsModal({
                   }
                 />
               )}
-              <p className="text-xs text-slate-500">
-                Automatically clear clipboard after X seconds
-              </p>
             </div>
 
             {/* Auto-lock */}
@@ -324,7 +317,7 @@ export default function SettingsModal({
                     }))
                   }
                 />
-                Lock after X seconds of inactivity
+                Lock vault after X seconds of inactivity
               </label>
               {form.autolockSec !== null && (
                 <input
@@ -340,10 +333,6 @@ export default function SettingsModal({
                   }
                 />
               )}
-              <p className="text-xs text-slate-500">
-                Automatically lock the vault after the given number of idle
-                seconds.
-              </p>
             </div>
 
             {/* Show deleted */}
@@ -357,10 +346,10 @@ export default function SettingsModal({
               />
               Display deleted items
             </label>
-            <p className="text-xs text-slate-500">
-              Your relay may not support note deletion so we use some magic to
+            <span className="text-xs">
+              Some relays may not support note deletion, so we use some magic to
               hide them.
-            </p>
+            </span>
           </fieldset>
 
           <div className="flex items-center justify-end gap-2 pt-2">
