@@ -311,14 +311,14 @@ export default function ItemList({
               onChange={(e) => debouncedSetQuery(e.target.value)}
               autoComplete="off"
             />
-            <span
+            <button
               className="flex items-center px-4 border rounded-l-none rounded-r-lg border-emerald-600 text-emerald-300 hover:bg-emerald-600/40"
               onClick={onNewLogin}
               title="Create a new login"
               type="button"
             >
               <NewLoginIcon width="16" height="16" /> {/* Add entry */}
-            </span>
+            </button>
           </div>
         </div>
       </div>
