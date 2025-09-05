@@ -7,6 +7,7 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 - **NIP-07 sign-in**: Connect with a browser Nostr signer such as Alby.
 - **End-to-end encryption**: Client-side passphrase → Argon2id key derivation → XChaCha20-Poly1305 AEAD.
 - **Per-item addressing**: Each record is a **kind 30078** (parameterized-replaceable) event keyed by a `d` tag.
+- **Search**: Fast item search by title, category, or site address.
 - **Fast UI**: New/Edit via modals, searchable & sortable table, optional favicons.
 - **Copy helpers**: Click to copy **username**, **password**, or **2FA token**.
 - **TOTP support**: Store a Base32 **2FA Secret Key**.
