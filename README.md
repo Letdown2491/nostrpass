@@ -1,6 +1,10 @@
 # NostrPass
 A local-first password manager powered by **Nostr**. Your credentials are encrypted in the browser and synced as app-data events to your relays. Nothing sensitive leaves your device unencrypted.
 
+| <div style="width=25%;">Desktop</div> | <div style="width=25%;">Mobile</div> | <div style="width=25%;">Settings</div> | <div style="width=25%;">Editing</div>
+| ------ | ------ | ------ | ------ |
+| <img src="https://blossom.primal.net/1853c32d1af9e3531c8eb12ab0203b56ab82e4be536746cb4a836cb7f0840b71.png" width="100%" height="200px" />   | <img src="https://blossom.primal.net/c961144aa28f9c039b1430533732de8d444afdca986ecaf9ace36ed90252b32e.png" width="100%" height="200px" />   |   <img src="https://blossom.primal.net/badc499ddbd8f6b82439c5124560dec54c2a54bccb4ad5e1fd9ddd1ba190be72.png" width="100%" height="200px" />  |   <img src="https://blossom.primal.net/ab51757aef80362b0702a25f703be0ed5c14798e4ac1994bedd035718e0b6cb7.png" width="100%" height="200px" />
+
 ## Features
 - **NIP-07 sign-in**: Connect with a browser Nostr signer such as Alby.
 - **End-to-end encryption**: Client-side passphrase → Argon2id key derivation → XChaCha20-Poly1305 AEAD.
