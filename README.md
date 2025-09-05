@@ -1,7 +1,7 @@
 # NostrPass
 A local-first password manager powered by **Nostr**. Your credentials are encrypted in the browser and synced as app-data events to your relays. Nothing sensitive leaves your device unencrypted.
 
-<img src="https://blossom.primal.net/1853c32d1af9e3531c8eb12ab0203b56ab82e4be536746cb4a836cb7f0840b71.png" width="100%" height="200px" />
+![Desktop](https://blossom.primal.net/1853c32d1af9e3531c8eb12ab0203b56ab82e4be536746cb4a836cb7f0840b71.png)
 
 ## Features
 - **NIP-07 sign-in**: Connect with a browser Nostr signer such as Alby.
