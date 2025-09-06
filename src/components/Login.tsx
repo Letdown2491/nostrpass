@@ -50,7 +50,7 @@ export default function Login({
         <div className="space-y-1">
           <input
             className="w-full"
-            placeholder="wss://example.com"
+            placeholder="wss://relay.nostrpass.xyz"
             value={customRelay}
             onChange={(e) => setCustomRelay(e.target.value)}
             pattern="^wss?://.*$"
