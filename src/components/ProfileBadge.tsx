@@ -34,7 +34,16 @@ export default function ProfileBadge({
   return (
     <div className="flex items-center gap-3">
       <div className="leading-tight text-right hidden sm:block">
-        <div className="font-medium">{name}</div>
+        <div className="font-medium">
+          <a
+            href={`https://nostr.band/?q=${encodeURIComponent(npub)}`}
+            title={name}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {name}
+          </a>
+        </div>
         <div className="text-xs text-slate-400 break-all">
           {shortNpub(npub)}
         </div>
