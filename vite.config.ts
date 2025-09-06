@@ -1,10 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
   plugins: [
+    nodePolyfills({ exclude: ["vm"] }),
     react(),
+    nodePolyfills(),
     VitePWA({
       strategies: "injectManifest",
       srcDir: "src",
@@ -14,8 +17,12 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    include: ["crypto"],
+  },
   build: {
     rollupOptions: {
+      plugins: [nodePolyfills({ exclude: ["vm"] })],
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
