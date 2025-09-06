@@ -14,5 +14,26 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react")) return "react-vendor";
+            if (id.includes("@zxing")) return "zxing-vendor";
+            if (
+              id.includes("libsodium") ||
+              id.includes("hash-wasm") ||
+              id.includes("@noble")
+            )
+              return "crypto-vendor";
+            if (id.includes("workbox")) return "workbox-vendor";
+            return "vendor";
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
   server: { port: 4173 },
 });
