@@ -3,20 +3,23 @@ import { unlockVault } from "../state/vault";
 import { LogoIcon } from "./Icons";
 
 export default function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
-  const [pw, setPw] = React.useState("");
+  const pwRef = React.useRef<HTMLInputElement>(null);
   const [busy, setBusy] = React.useState(false);
 
-  React.useEffect(() => {
-    return () => setPw("");
-  }, []);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const input = pwRef.current;
+    let pw = input?.value ?? "";
     setBusy(true);
     try {
-      await unlockVault(pw);
+      try {
+        await unlockVault(pw);
+      } finally {
+        pw = "";
+        if (input) input.value = "";
+      }
       onUnlocked();
     } finally {
-      setPw("");
       setBusy(false);
     }
   };
@@ -30,10 +33,9 @@ export default function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
         NostrPass
       </h2>
       <input
+        ref={pwRef}
         type="password"
         placeholder="Enter vault passphrase to continue"
-        value={pw}
-        onChange={(e) => setPw(e.target.value)}
         className="w-full"
         autoComplete="off"
         required
