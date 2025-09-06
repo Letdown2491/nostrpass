@@ -25,8 +25,8 @@ export default function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
       onSubmit={submit}
       className="max-w-md mx-auto mt-24 space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/60"
     >
-      <h2 className="text-3xl font-semibold inline-flex">
-        <LogoIcon height={34} width={36} />
+      <h2 className="text-5xl font-semibold inline-flex">
+        <LogoIcon height={48} width={48} />
         NostrPass
       </h2>
       <input
@@ -41,7 +41,7 @@ export default function Unlock({ onUnlocked }: { onUnlocked: () => void }) {
       <button className="primary w-full py-2" disabled={busy}>
         {busy ? "Unlocking…" : "Unlock"}
       </button>
-      <p className="text-xs text-slate-500">
+      <p className=" text-slate-500">
         After unlocking, your vault will sync from the configured relays and
         decrypt locally. Your passphrase never leaves this device.
       </p>

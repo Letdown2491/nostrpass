@@ -40,12 +40,13 @@ export class RelayPool extends EventTarget {
     for (const url of this.urls) {
       if (this.sockets.has(url)) continue;
       try {
-        const { protocol, hostname, port } = new URL(url);
-        const isLocalWs =
-          protocol === "ws:" && hostname === "localhost" && port === "3355";
-        if (protocol !== "wss:" && !isLocalWs) {
-          this.logger.warn("[relay] insecure url skipped", url);
+        const { protocol } = new URL(url);
+        if (protocol !== "wss:" && protocol !== "ws:") {
+          this.logger.warn("[relay] invalid protocol skipped", url);
           continue;
+        }
+        if (protocol === "ws:") {
+          this.logger.warn("[relay] insecure url", url);
         }
       } catch (e) {
         this.logger.warn("[relay] invalid url skipped", url, e);

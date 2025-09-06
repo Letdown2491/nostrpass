@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autolockSec: 300,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
-  relays: ["ws://localhost:3355"],
+  relays: ["ws://127.0.0.1:3355"],
   categories: [
     "Communication",
     "Development",
@@ -74,8 +74,7 @@ function sanitize(parsed: any): Settings {
             parsed.relays
               .map((r: any) => (typeof r === "string" ? r.trim() : ""))
               .filter(
-                (r: string) =>
-                  r.startsWith("wss://") || r === "ws://localhost:3355",
+                (r: string) => r.startsWith("ws://") || r.startsWith("wss://"),
               ),
           ),
         )
@@ -122,7 +121,7 @@ export async function buildSettingsEvent(
       new Set(
         settings.relays
           .map((r) => r.trim())
-          .filter((r) => r.startsWith("wss://") || r === "ws://localhost:3355"),
+          .filter((r) => r.startsWith("ws://") || r.startsWith("wss://")),
       ),
     ),
   };

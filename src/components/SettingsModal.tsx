@@ -53,7 +53,7 @@ export default function SettingsModal({
         .map((r) => r.trim())
         .filter((r) => r.length > 0);
       const invalid = relays.find(
-        (r) => !r.startsWith("wss://") && r !== "ws://localhost:3355",
+        (r) => !r.startsWith("ws://") && !r.startsWith("wss://"),
       );
       if (invalid) {
         throw new Error(`Invalid relay URL: ${invalid}`);
@@ -98,6 +98,11 @@ export default function SettingsModal({
             {/* Relay URLs */}
             <div className="space-y-2 text-sm">
               <div className="text-xs">Relay URLs</div>
+              {DEFAULT_SETTINGS.relays.join(",") !== form.relays.join(",") && (
+                <div className="text-xs text-slate-400">
+                  Using custom default relay: {form.relays.join(", ")}
+                </div>
+              )}
               {form.relays.map((r, idx) => {
                 const trimmed = r.trim();
                 const status = relayStatuses[trimmed];
@@ -111,8 +116,8 @@ export default function SettingsModal({
                     <span className={`w-3 h-3 rounded-full ${color}`} />
                     <input
                       className="w-full"
-                      pattern="^(wss://.*|ws://localhost:3355)$"
-                      title="Relay URLs must start with wss:// or be ws://localhost:3355"
+                      pattern="^wss?://.*$"
+                      title="Relay URLs must start with ws:// or wss://"
                       value={r}
                       onChange={(e) =>
                         setForm((s) => {
@@ -207,6 +212,7 @@ export default function SettingsModal({
               <input
                 type="checkbox"
                 checked={form.truncateFields}
+                className="accent-indigo-600"
                 onChange={(e) =>
                   setForm((s) => ({ ...s, truncateFields: e.target.checked }))
                 }
@@ -219,6 +225,7 @@ export default function SettingsModal({
               <input
                 type="checkbox"
                 checked={form.showFavicons}
+                className="accent-indigo-600"
                 onChange={(e) =>
                   setForm((s) => ({ ...s, showFavicons: e.target.checked }))
                 }
@@ -274,6 +281,7 @@ export default function SettingsModal({
                 <input
                   type="checkbox"
                   checked={form.clipboardClearSec !== null}
+                  className="accent-indigo-600"
                   onChange={(e) =>
                     setForm((s) => ({
                       ...s,
@@ -308,6 +316,7 @@ export default function SettingsModal({
                 <input
                   type="checkbox"
                   checked={form.autolockSec !== null}
+                  className="accent-indigo-600"
                   onChange={(e) =>
                     setForm((s) => ({
                       ...s,
@@ -340,6 +349,7 @@ export default function SettingsModal({
               <input
                 type="checkbox"
                 checked={form.showDeleted}
+                className="accent-indigo-600"
                 onChange={(e) =>
                   setForm((s) => ({ ...s, showDeleted: e.target.checked }))
                 }
