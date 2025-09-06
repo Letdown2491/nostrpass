@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autolockSec: 300,
   defaultSort: { key: "title", dir: "asc" },
   favicon: { source: "ddg" },
-  relays: ["ws://127.0.0.1:3355"],
+  relays: ["wss://relay.nostrpass.me"],
   categories: [
     "Communication",
     "Development",

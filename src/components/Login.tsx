@@ -31,7 +31,7 @@ export default function Login({
       <h1 className="text-5xl font-semibold inline-flex">
         <LogoIcon height={48} width={48} /> NostrPass
       </h1>
-      <p className="text-sm text-slate-400">
+      <p className="text-sm">
         Welcome to NostrPass, a Nostr-enabled password manager.
       </p>
       <button className="primary w-full py-2" onClick={connect}>
@@ -64,10 +64,18 @@ export default function Login({
         </div>
       )}
       {err && <div className="text-rose-400 text-sm">{err}</div>}
-      <p className="text-sm  text-slate-500">
-        The NostrPass relay will be used by default for first time users. If you
-        are a returning user, you will be connected to the relays specified in
-        your Settings page.
+      <p className="text-sm text-slate-200">
+        Sign up for{" "}
+        <a
+          href="https://relay.nostrpass.me"
+          title="NostrPass Relay"
+          rel="noopener noreferrer"
+        >
+          <span className="text-indigo-500">our premium relay</span>
+        </a>{" "}
+        to use the app defaults and support the project, or if you want to use
+        your own, uncheck the box above and enter it. After sign in, your custom
+        relay will be set as default so this is a one time input only.
       </p>
     </div>
   );
