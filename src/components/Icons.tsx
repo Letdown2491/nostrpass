@@ -20,7 +20,7 @@ export const LogoIcon = ({
     aria-label="Password manager icon"
   >
     {/* Background rounded square */}
-    <rect x="4" y="4" width="56" height="56" rx="8" ry="8" fill={bgColor} />
+    <rect x="4" y="4" width="56" height="56" rx="8" ry="8" fill="none" />
     {/* Lock body */}
     <rect x="18" y="28" width="28" height="24" rx="4" ry="4" fill={lockColor} />
     {/* Shackle */}

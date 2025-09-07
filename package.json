@@ -9,19 +9,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@noble/hashes": "^1.4.0",
+    "@noble/hashes": "^1.8.0",
     "@types/libsodium-wrappers": "^0.7.14",
     "@types/react-window": "1.8.8",
     "@types/uuid": "^10.0.0",
     "@zxing/browser": "^0.1.5",
     "check-password-strength": "^3.0.0",
-    "dexie": "^4.0.8",
-    "hash-wasm": "^4.11.0",
-    "libsodium-wrappers": "^0.7.13",
+    "dexie": "^4.2.0",
+    "hash-wasm": "^4.12.0",
+    "libsodium-wrappers": "^0.7.15",
     "lucide-react": "^0.542.0",
     "nostr-tools": "^2.16.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-window": "^1.8.11",
     "uuid": "^9.0.1",
     "vite-plugin-pwa": "^1.0.3",
@@ -29,14 +29,14 @@
     "workbox-precaching": "^7.3.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.3",
-    "vite": "^5.2.0",
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2",
+    "vite": "^5.4.19",
     "vite-plugin-node-polyfills": "^0.24.0"
   }
 }
