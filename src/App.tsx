@@ -468,7 +468,6 @@ export default function App() {
             onPublish={publish}
             onNewLogin={() => setShowNewLogin(true)}
             settings={settings}
-            onOpenSettings={() => setShowSettings(true)}
             onSaveSettings={saveSettings}
             onLoaded={handleItemsLoaded}
           />

@@ -2,7 +2,6 @@ import React from "react";
 import type { SortKey } from "../hooks/useItemSorting";
 
 type Props = {
-  remaining: number;
   toggleSort: (key: SortKey) => void;
   sortIndicator: (key: SortKey) => string;
 };
@@ -31,11 +30,7 @@ function Th({
   );
 }
 
-export default function ItemTableHeader({
-  remaining,
-  toggleSort,
-  sortIndicator,
-}: Props) {
+export default function ItemTableHeader({ toggleSort, sortIndicator }: Props) {
   return (
     <thead>
       <tr className="text-left text-slate-400 border-b border-slate-800">

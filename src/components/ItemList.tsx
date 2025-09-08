@@ -9,7 +9,7 @@ import {
 import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32, clearTotpCache } from "../lib/totp";
 import type { Settings } from "../state/settings";
-import { NewLoginIcon, SettingsIcon } from "./Icons";
+import { NewLoginIcon } from "./Icons";
 import ItemRow from "./ItemRow";
 import ItemTableHeader from "./ItemTableHeader";
 import useItemSorting from "../hooks/useItemSorting";
@@ -22,7 +22,6 @@ export default function ItemList({
   onPublish,
   onNewLogin,
   settings,
-  onOpenSettings,
   onSaveSettings,
   onLoaded,
 }: {
@@ -31,7 +30,6 @@ export default function ItemList({
   onPublish: (ev: NostrEvent) => Promise<PublishResult>;
   onNewLogin: () => void;
   settings: Settings;
-  onOpenSettings: () => void;
   onSaveSettings: (next: Settings) => Promise<void>;
   onLoaded: () => void;
 }) {
@@ -40,10 +38,6 @@ export default function ItemList({
   }
 
   const [rows, setRows] = React.useState<ItemRow[]>([]);
-  const activeCount = React.useMemo(
-    () => rows.filter((r) => !r.deleted).length,
-    [rows],
-  );
   const [pending, setPending] = React.useState(0);
   const [busy, setBusy] = React.useState<Record<string, boolean>>({});
   const [editItem, _setEditItem] = React.useState<ItemRow | null>(null);
@@ -77,9 +71,6 @@ export default function ItemList({
   const [otpMap, setOtpMap] = React.useState<Record<string, string>>({});
   const [counter, setCounter] = React.useState(
     Math.floor(Date.now() / 1000 / STEP),
-  );
-  const [remaining, setRemaining] = React.useState(
-    STEP - (Math.floor(Date.now() / 1000) % STEP),
   );
 
   const otpCache = React.useRef<
@@ -175,13 +166,11 @@ export default function ItemList({
     };
   }, [events, onLoaded]);
 
-  // 1s heartbeat: update countdown; only refresh codes when the 30s counter changes
+  // 1s heartbeat: refresh codes when the 30s counter changes
   React.useEffect(() => {
     const t = setInterval(() => {
       const nowSec = Math.floor(Date.now() / 1000);
       const curCounter = Math.floor(nowSec / STEP);
-      const rem = STEP - (nowSec % STEP || 0);
-      setRemaining(rem === 0 ? STEP : rem);
       if (curCounter !== counter) {
         setCounter(curCounter);
       }
@@ -326,7 +315,6 @@ export default function ItemList({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <ItemTableHeader
-            remaining={remaining}
             toggleSort={toggleSort}
             sortIndicator={sortIndicator}
           />

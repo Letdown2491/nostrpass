@@ -5,8 +5,6 @@ export const LogoIcon = ({
   width = 64,
   height = 64,
   className = "align-middle",
-  // optional overrides for the two main colors
-  bgColor = "",
   lockColor = "rgba(87, 95, 207,1.0)",
   keyholeColor = "rgba(236, 240, 241,1.0)",
 }) => (
