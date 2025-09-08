@@ -9,7 +9,13 @@ export default function Login({
   const [err, setErr] = React.useState<string | null>(null);
   const [useDefaultRelays, setUseDefaultRelays] = React.useState(true);
   const [customRelay, setCustomRelay] = React.useState("");
-  const connect = async () => {
+  const [remote, setRemote] = React.useState(false);
+  const [ncUrl, setNcUrl] = React.useState("");
+  const [status, setStatus] = React.useState<
+    "idle" | "connecting" | "connected" | "error"
+  >("idle");
+
+  const connectLocal = async () => {
     try {
       let relay: string | null = null;
       if (!useDefaultRelays) {
@@ -26,6 +32,27 @@ export default function Login({
       setErr(e.message || String(e));
     }
   };
+  const connectRemote = async () => {
+    setErr(null);
+    try {
+      let relay: string | null = null;
+      if (!useDefaultRelays) {
+        const trimmed = customRelay.trim();
+        if (!/^wss?:\/\//.test(trimmed)) {
+          setErr("Invalid relay URL");
+          return;
+        }
+        relay = trimmed;
+      }
+      setStatus("connecting");
+      const pk = await onSignerConnect(ncUrl.trim());
+      setStatus("connected");
+      onConnected(pk, relay);
+    } catch (e: any) {
+      setStatus("error");
+      setErr(e.message || String(e));
+    }
+  };
   return (
     <div className="max-w-md mx-auto mt-24 space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/60">
       <h1 className="text-5xl font-semibold inline-flex">
@@ -34,9 +61,62 @@ export default function Login({
       <p className="text-sm">
         Welcome to NostrPass, a Nostr-enabled password manager.
       </p>
-      <button className="primary w-full py-2" onClick={connect}>
-        Connect Nostr Signer
-      </button>
+      {!remote ? (
+        <>
+          <button className="primary w-full py-2" onClick={connectLocal}>
+            Connect via Extension (NIP-07)
+          </button>
+          <button
+            className="primary w-full py-2"
+            onClick={() => {
+              setRemote(true);
+              setStatus("idle");
+              setErr(null);
+            }}
+          >
+            Connect via Remote Signer (NIP-46)
+          </button>
+        </>
+      ) : (
+        <div className="space-y-2">
+          <input
+            className="w-full"
+            placeholder="nostrconnect://..."
+            value={ncUrl}
+            onChange={(e) => setNcUrl(e.target.value)}
+          />
+          {status === "connecting" && (
+            <div className="text-sm text-slate-200">Connecting…</div>
+          )}
+          {status === "connected" && (
+            <div className="text-sm text-emerald-400">Connected</div>
+          )}
+          {status === "error" && err && (
+            <div className="text-rose-400 text-sm">{err}</div>
+          )}
+          <div className="flex gap-2">
+            <button
+              className="primary w-full py-2"
+              onClick={connectRemote}
+              disabled={status === "connecting"}
+            >
+              Connect
+            </button>
+            <button
+              className="w-full py-2 rounded-lg border border-slate-600 hover:bg-slate-600/10"
+              onClick={() => {
+                setRemote(false);
+                setNcUrl("");
+                setStatus("idle");
+                setErr(null);
+              }}
+              disabled={status === "connecting"}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -63,7 +143,9 @@ export default function Login({
           )}
         </div>
       )}
-      {err && <div className="text-rose-400 text-sm">{err}</div>}
+      {status !== "error" && err && (
+        <div className="text-rose-400 text-sm">{err}</div>
+      )}{" "}
       <p className="text-sm text-slate-200">
         Sign up for{" "}
         <a

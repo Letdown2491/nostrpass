@@ -28,7 +28,6 @@ const session: Session = {
 };
 
 export async function onSignerConnect(ncUrl?: string): Promise<string> {
-  await signer.connect(ncUrl);
   try {
     await signer.connect(ncUrl);
     const pk = await signer.getPublicKey();
