@@ -1,3 +1,4 @@
+import type { NostrEvent, Envelope } from "../lib/types";
 import { decryptWithVaultKey } from "../lib/crypto";
 import { ensureVaultKey, buildVaultEvent } from "./vault";
 
