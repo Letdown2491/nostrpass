@@ -4,7 +4,7 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 ![Desktop](https://blossom.primal.net/1853c32d1af9e3531c8eb12ab0203b56ab82e4be536746cb4a836cb7f0840b71.png)
 
 ## Features
-- **NIP-07 sign-in**: Connect with a browser Nostr signer such as Alby.
+- **NIP-07 / NIP-46 sign-in**: Connect with a browser signer like Alby or a remote signer via Nostr Connect.
 - **End-to-end encryption**: Client-side passphrase → Argon2id key derivation → XChaCha20-Poly1305 AEAD.
 - **Per-item addressing**: Each record is a **kind 30078** (parameterized-replaceable) event keyed by a `d` tag.
 - **Search**: Fast item search by title, category, or site address.
@@ -29,7 +29,7 @@ A local-first password manager powered by **Nostr**. Your credentials are encryp
 
 ### Prerequisites
 - **Node.js 18+** and **pnpm** or **Docker** installed.
-- A **NIP-07** browser signer such as Alby, Amber, or Nostr Connect.
+- A **NIP-07** browser signer (Alby, Amber, etc.) or a **NIP-46** remote signer that provides a Nostr Connect URL.
 
 ### Install & run (Docker)
 ```bash
@@ -62,6 +62,14 @@ pnpm preview
 - **Unlock**: choose a passphrase; it’s kept in memory for this session only, but is required to decrypt your login entries. If you use a different passphrase on next login, you will not be able to decrypt existing notes and you will not see them in the UI.
 - **Create a login**: click New Login, fill in fields (Title, Site, Username, Password, optional 2FA Secret Key, Notes), then Encrypt & Publish.
 - **Sync & decrypt**: the newest version of each item is fetched from your relays and decrypted locally after EOSE.
+
+### NIP-46 (Nostr Connect)
+NostrPass can sign via a remote signer using the [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md) protocol.
+
+1. **Get a connect URL** – In a NIP-46 compatible signer (e.g., nsecBunker, LNC), create a new connection and copy the URL (`nostrconnect://…` or `bunker://…`).
+2. **Connect** – On the login screen choose "Connect via Remote Signer (NIP-46)", paste the URL and press **Connect**. Approve the request in your signer.
+3. **Troubleshooting** – If the connection fails, verify the URL is correct and the remote signer is online. Some signers require you to explicitly approve the session.
+4. **Dependencies** – NIP-46 support uses `nostr-tools`' NIP-46 helpers and requires Node.js polyfills via `vite-plugin-node-polyfills`. Run `pnpm install` to install these dependencies before building.
 
 ### Configuration
 - **Relays**: Configure your preferred read/write relays from the Settings modal. The list is synced to your Nostr settings.

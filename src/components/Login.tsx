@@ -59,12 +59,13 @@ export default function Login({
         <LogoIcon height={48} width={48} /> NostrPass
       </h1>
       <p className="text-sm">
-        Welcome to NostrPass, a Nostr-enabled password manager.
+        NostrPass is a Nostr-enabled password manager where you control your
+        data. Choose you login method to continue.
       </p>
       {!remote ? (
         <>
           <button className="primary w-full py-2" onClick={connectLocal}>
-            Connect via Extension (NIP-07)
+            Connect via Extension
           </button>
           <button
             className="primary w-full py-2"
@@ -74,7 +75,7 @@ export default function Login({
               setErr(null);
             }}
           >
-            Connect via Remote Signer (NIP-46)
+            Connect via Remote Signer
           </button>
         </>
       ) : (
