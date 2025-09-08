@@ -102,13 +102,20 @@ class SignerManager extends EventTarget implements NostrSigner {
         [signerPub, receivedSecret] = msg.params;
       } else if (Array.isArray(msg?.result)) {
         [signerPub, receivedSecret] = msg.result;
+      } else if (typeof msg?.result === "string") {
+        signerPub = event.pubkey;
+        receivedSecret = msg.result;
       } else {
         throw new Error(`unexpected response: ${JSON.stringify(msg)}`);
       }
       if (receivedSecret !== secret)
         throw new Error(`invalid secret from signer: ${JSON.stringify(msg)}`);
       if (!signerPub)
-        throw new Error(`missing signer pubkey: ${JSON.stringify(msg)}`);
+        throw new Error(
+          `missing signer pubkey: ${JSON.stringify(
+            msg,
+          )} (signer's public key is inferred from event.pubkey when result is a string)`,
+        );
       this.pointer = { pubkey: signerPub, relays, secret };
       const bunker = new BunkerSigner(secretKey, this.pointer);
       await bunker.connect();
