@@ -5,6 +5,20 @@ const OFFLINE_URLS = [
   "./favicon.ico",
   "./manifest.webmanifest",
 ];
+
+// Only these paths will ever be cached by the fetch handler.
+// Anything outside of this list will bypass the cache.
+const CACHE_WHITELIST = [
+  "/",
+  "/index.html",
+  "/favicon.ico",
+  "/icon.svg",
+  "/manifest.webmanifest",
+];
+
+// Requests matching any of these patterns are explicitly excluded
+// from the cache. This is useful for API calls or user specific data.
+const CACHE_BLACKLIST = [/^\/api\//, /^\/user\//];
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
@@ -35,25 +49,16 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-  const isIcon =
-    event.request.destination === "image" && url.pathname.endsWith(".ico");
+  // Skip cross-origin requests entirely.
+  if (url.origin !== self.location.origin) return;
 
-  if (isIcon) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
-        const cached = await cache.match(event.request);
-        if (cached) return cached;
-        try {
-          const response = await fetch(event.request);
-          if (response.ok) cache.put(event.request, response.clone());
-          return response;
-        } catch {
-          return new Response("", { status: 404 });
-        }
-      }),
-    );
-    return;
-  }
+  const path = url.pathname;
+  const isWhitelisted = CACHE_WHITELIST.some((p) => path.startsWith(p));
+  const isBlacklisted = CACHE_BLACKLIST.some((r) => r.test(path));
+
+  // If the request isn't for a known static asset or is blacklisted,
+  // let the network handle it without caching.
+  if (!isWhitelisted || isBlacklisted) return;
 
   event.respondWith(
     fetch(event.request)
