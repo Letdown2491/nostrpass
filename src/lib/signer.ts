@@ -196,6 +196,6 @@ class SignerManager extends EventTarget implements NostrSigner {
   }
 }
 
-export const signer = new SignerManager();
+const signer = new SignerManager();
 
 export default signer;
