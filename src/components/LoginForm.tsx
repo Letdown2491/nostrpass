@@ -1,10 +1,11 @@
 import React from "react";
-import TotpQrScanner from "./TotpQrScanner";
 import { ShowIcon, HideIcon, GenerateIcon, ScanCodeIcon } from "./Icons";
 import type {
   LoginFormValues,
   UseLoginFormReturn,
 } from "../hooks/useLoginForm";
+
+const TotpQrScanner = React.lazy(() => import("./TotpQrScanner"));
 
 export default function LoginForm({
   mode,
@@ -76,10 +77,12 @@ export default function LoginForm({
   return (
     <>
       {mode === "new" && showScanner && (
-        <TotpQrScanner
-          onScan={handleQrScan}
-          onClose={() => setShowScanner(false)}
-        />
+        <React.Suspense fallback={<div>Loading…</div>}>
+          <TotpQrScanner
+            onScan={handleQrScan}
+            onClose={() => setShowScanner(false)}
+          />
+        </React.Suspense>
       )}
       <form className="space-y-3" onSubmit={submit}>
         <label className="text-sm block">
