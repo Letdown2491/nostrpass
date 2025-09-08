@@ -1,10 +1,10 @@
 import type { Envelope, NostrEvent } from "../lib/types";
 import {
-  decryptEnvelope,
-  deriveVaultKey,
-  encryptEnvelope,
+  decryptWithVaultKey,
+  decryptWithVaultKey,
+  encryptWithVaultKey,
 } from "../lib/crypto";
-import { ensureKdf, getPassphrase } from "./vault";
+import { ensureKdf, ensureVaultKey, getPassphrase } from "./vault";
 import signer from "../lib/signer";
 
 export const SETTINGS_D = "com.you.pm:settings:v1";
@@ -95,15 +95,16 @@ export async function parseSettingsEvent(
         typeof parsed === "object" &&
         "v" in parsed &&
         "ct" in parsed &&
-        "alg" in parsed
+        "alg" in parsed &&
+        "kdf" in parsed
       )
     ) {
       console.warn("Invalid settings envelope: missing fields");
       return null;
     }
-    const pw = getPassphrase();
-    if (!pw) return null;
-    const decrypted = await decryptEnvelope(parsed as Envelope, pw);
+    const env = parsed as Envelope;
+    const vaultKey = await ensureVaultKey(env);
+    const decrypted = await decryptWithVaultKey(env, vaultKey);
     return sanitize(decrypted);
   } catch (err) {
     console.warn("Failed to parse settings event", err);
@@ -126,12 +127,10 @@ export async function buildSettingsEvent(
       ),
     ),
   };
-  const pw = getPassphrase();
-  if (!pw) throw new Error("Locked: no passphrase in memory");
+  const vk = getVaultKey();
+  if (!vk) throw new Error("Locked: no vault key in memory");
   const kdf = ensureKdf();
-  const vaultKey = await deriveVaultKey(pw, kdf);
-  const env = await encryptEnvelope(sanitized, vaultKey, kdf);
-  vaultKey.fill(0);
+  const env = await encryptWithVaultKey(sanitized, vk, kdf);
   const content = JSON.stringify(env);
   const unsigned = {
     kind: 30078,

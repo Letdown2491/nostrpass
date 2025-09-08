@@ -1,9 +1,9 @@
 import type { Envelope, KdfParams, NostrEvent } from "../lib/types";
 import {
-  decryptEnvelope,
   defaultKdf,
   deriveVaultKey,
-  encryptEnvelope,
+  encryptWithVaultKey,
+  decryptWithVaultKey,
   initSodium,
   toB64,
 } from "../lib/crypto";
@@ -14,6 +14,7 @@ import { utf8ToBytes } from "@noble/hashes/utils";
 type Session = {
   pubkey: string | null;
   passphrase: Uint8Array | null;
+  vaultKey: Uint8Array | null;
   kdf: KdfParams | null;
   unlocked: boolean;
   vaultKeyReady: boolean;
@@ -22,6 +23,7 @@ type Session = {
 const session: Session = {
   pubkey: null,
   passphrase: null,
+  vaultKey: null,
   kdf: null,
   unlocked: false,
   vaultKeyReady: false,
@@ -61,10 +63,17 @@ export function ensureKdf(): KdfParams {
 
 export async function unlockVault(passphrase: string): Promise<void> {
   session.passphrase = utf8ToBytes(passphrase);
+  const kdf = ensureKdf();
+  session.vaultKey = await deriveVaultKey(session.passphrase, kdf);
   // Zero out the original passphrase string to avoid leaving sensitive data in memory
   passphrase = "";
   session.unlocked = true;
   session.vaultKeyReady = true;
+  if (session.vaultKey) {
+    session.vaultKey.fill(0);
+    session.vaultKey = null;
+  }
+  session.kdf = null;
   await initSodium();
 }
 
@@ -73,6 +82,11 @@ export function lockVault(): void {
     session.passphrase.fill(0);
     session.passphrase = null;
   }
+  if (session.vaultKey) {
+    session.vaultKey.fill(0);
+    session.vaultKey = null;
+  }
+  session.kdf = null;
   session.unlocked = false;
   session.vaultKeyReady = false;
 }
@@ -90,13 +104,35 @@ export function getPassphrase(): Uint8Array | null {
   return session.passphrase;
 }
 
-// Decrypt using in-memory session passphrase
+function kdfParamsEqual(a: KdfParams | null, b: KdfParams): boolean {
+  return (
+    !!a &&
+    a.name === b.name &&
+    a.salt_b64 === b.salt_b64 &&
+    a.m === b.m &&
+    a.t === b.t &&
+    a.p === b.p
+  );
+}
+
+export async function ensureVaultKey(envelope: Envelope): Promise<Uint8Array> {
+  const pw = session.passphrase;
+  if (!pw) throw new Error("Locked: no passphrase in memory");
+  if (!session.vaultKey || !kdfParamsEqual(session.kdf, envelope.kdf)) {
+    const vaultKey = await deriveVaultKey(pw, envelope.kdf);
+    if (session.vaultKey) session.vaultKey.fill(0);
+    session.vaultKey = vaultKey;
+    session.kdf = envelope.kdf;
+  }
+  return session.vaultKey!;
+}
+
+// Decrypt using in-memory session vault key
 export async function decryptItemContentUsingSession(content: string) {
   const env = parseEnvelope(content);
   if (!env) throw new Error("Invalid envelope");
-  const pw = session.passphrase;
-  if (!pw) throw new Error("Locked: no passphrase in memory");
-  return await decryptEnvelope(env, pw);
+  const vaultKey = await ensureVaultKey(env);
+  return await decryptWithVaultKey(env, vaultKey);
 }
 
 export const NS_ITEM_PREFIX = "com.you.pm:item:";
@@ -111,12 +147,10 @@ export async function buildItemEvent(
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
-  const pw = session.passphrase;
-  if (!pw) throw new Error("Locked: no passphrase in memory");
+  const vk = session.vaultKey;
+  if (!vk) throw new Error("Locked: no vault key in memory");
   const kdf = ensureKdf();
-  const vaultKey = await deriveVaultKey(pw, kdf);
-  const env = await encryptEnvelope(body, vaultKey, kdf);
-  vaultKey.fill(0);
+  const env = await encryptWithVaultKey(body, vk, kdf);
   const ev = {
     kind: 30078,
     created_at: Math.floor(Date.now() / 1000),
