@@ -7,6 +7,7 @@ import {
   initSodium,
   toB64,
 } from "../lib/crypto";
+import signer from "../lib/signer";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 
@@ -26,10 +27,9 @@ const session: Session = {
   vaultKeyReady: false,
 };
 
-export async function onSignerConnect(): Promise<string> {
-  if (!("nostr" in window)) throw new Error("NIP-07 signer not found");
-  // @ts-ignore
-  const pk = await window.nostr.getPublicKey();
+export async function onSignerConnect(ncUrl?: string): Promise<string> {
+  await signer.connect(ncUrl);
+  const pk = await signer.getPublicKey();
   session.pubkey = pk;
   return pk;
 }
@@ -106,6 +106,6 @@ export async function buildItemEvent(
   } as any;
 
   // @ts-ignore
-  const signed = await window.nostr.signEvent(ev);
+  const signed = await signer.signEvent(ev);
   return signed as NostrEvent;
 }

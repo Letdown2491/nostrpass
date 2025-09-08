@@ -5,6 +5,7 @@ import {
   encryptEnvelope,
 } from "../lib/crypto";
 import { ensureKdf, getPassphrase } from "./vault";
+import signer from "../lib/signer";
 
 export const SETTINGS_D = "com.you.pm:settings:v1";
 
@@ -139,11 +140,6 @@ export async function buildSettingsEvent(
     content,
     pubkey,
   };
-
-  const signer = (globalThis as any).nostr;
-  if (!signer || typeof signer.signEvent !== "function") {
-    throw new Error("No NIP-07 signer available to sign settings event");
-  }
 
   const signed: NostrEvent = await signer.signEvent(unsigned);
   return signed;
