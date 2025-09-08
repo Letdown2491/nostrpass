@@ -39,6 +39,21 @@ export async function onSignerConnect(ncUrl?: string): Promise<string> {
   }
 }
 
+export async function onRemoteSignerConnect(
+  relays: string[],
+  metadata?: Record<string, any>,
+): Promise<string> {
+  try {
+    await signer.connectWithDeepLink(relays, metadata);
+    const pk = await signer.getPublicKey();
+    session.pubkey = pk;
+    return pk;
+  } catch (err) {
+    session.pubkey = null;
+    throw err;
+  }
+}
+
 export function ensureKdf(): KdfParams {
   if (!session.kdf) session.kdf = defaultKdf();
   return session.kdf;

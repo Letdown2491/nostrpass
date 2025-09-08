@@ -1,5 +1,6 @@
 import React from "react";
-import { onSignerConnect } from "../state/vault";
+import { onSignerConnect, onRemoteSignerConnect } from "../state/vault";
+import { DEFAULT_SETTINGS } from "../state/settings";
 import { LogoIcon } from "./Icons";
 export default function Login({
   onConnected,
@@ -44,6 +45,29 @@ export default function Login({
         }
         relay = trimmed;
       }
+      const relays = relay ? [relay] : DEFAULT_SETTINGS.relays;
+      setStatus("connecting");
+      const pk = await onRemoteSignerConnect(relays);
+      setStatus("connected");
+      onConnected(pk, relay);
+    } catch (e: any) {
+      setStatus("error");
+      setErr(e.message || String(e));
+      setRemote(true); // show manual URL field on failure
+    }
+  };
+  const connectManual = async () => {
+    setErr(null);
+    try {
+      let relay: string | null = null;
+      if (!useDefaultRelays) {
+        const trimmed = customRelay.trim();
+        if (!/^wss?:\/\//.test(trimmed)) {
+          setErr("Invalid relay URL");
+          return;
+        }
+        relay = trimmed;
+      }
       setStatus("connecting");
       const pk = await onSignerConnect(ncUrl.trim());
       setStatus("connected");
@@ -69,14 +93,17 @@ export default function Login({
           </button>
           <button
             className="primary w-full py-2"
-            onClick={() => {
-              setRemote(true);
-              setStatus("idle");
-              setErr(null);
-            }}
+            onClick={connectRemote}
+            disabled={status === "connecting"}
           >
             Connect via Remote Signer
           </button>
+          {status === "connecting" && (
+            <div className="text-sm text-slate-200">Connecting…</div>
+          )}
+          {status === "error" && err && (
+            <div className="text-rose-400 text-sm">{err}</div>
+          )}
         </>
       ) : (
         <div className="space-y-2">
@@ -98,7 +125,7 @@ export default function Login({
           <div className="flex gap-2">
             <button
               className="primary w-full py-2"
-              onClick={connectRemote}
+              onClick={connectManual}
               disabled={status === "connecting"}
             >
               Connect
