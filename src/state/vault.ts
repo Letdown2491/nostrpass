@@ -29,9 +29,15 @@ const session: Session = {
 
 export async function onSignerConnect(ncUrl?: string): Promise<string> {
   await signer.connect(ncUrl);
-  const pk = await signer.getPublicKey();
-  session.pubkey = pk;
-  return pk;
+  try {
+    await signer.connect(ncUrl);
+    const pk = await signer.getPublicKey();
+    session.pubkey = pk;
+    return pk;
+  } catch (err) {
+    session.pubkey = null;
+    throw err;
+  }
 }
 
 export function ensureKdf(): KdfParams {
