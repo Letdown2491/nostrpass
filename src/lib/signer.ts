@@ -62,20 +62,14 @@ class SignerManager extends EventTarget implements NostrSigner {
         metadata,
       );
       this.clientSecret = secretKey;
-      // open deep link
-      try {
-        if (typeof window !== "undefined") window.location.href = uri;
-      } catch {
-        /* ignore */
-      }
 
       const pool = new SimplePool();
       let sub: { close: () => void } | undefined;
-      const event: any = await new Promise((resolve, reject) => {
+      const eventPromise = new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           if (sub) sub.close();
           reject(new Error("no signer detected"));
-        }, 5000);
+        }, 15000);
         sub = pool.subscribe(
           relays,
           { kinds: [24133], "#p": [publicKey], limit: 1 },
@@ -89,6 +83,15 @@ class SignerManager extends EventTarget implements NostrSigner {
           },
         );
       });
+
+      // open deep link after subscribing so we don't miss fast responses
+      try {
+        if (typeof window !== "undefined") window.location.href = uri;
+      } catch {
+        /* ignore */
+      }
+
+      const event: any = await eventPromise;
       pool.close(relays);
       const convKey = getConversationKey(secretKey, event.pubkey);
       const msg = JSON.parse(decrypt(event.content, convKey));
