@@ -5,9 +5,8 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
   plugins: [
-    nodePolyfills({ exclude: ["vm"] }),
+    nodePolyfills({ exclude: ["vm"] }), // keep just one
     react(),
-    nodePolyfills(),
     VitePWA({
       strategies: "injectManifest",
       srcDir: "src",
@@ -42,5 +41,18 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
   },
-  server: { port: 4173 },
+
+  // Dev server (vite dev). Optional for you, but harmless.
+  server: {
+    host: true, // listen on 0.0.0.0
+    port: 5173, // typical dev port (can be any)
+  },
+
+  // ★ Preview server (vite preview) — this is what Nginx proxies to.
+  preview: {
+    host: true, // listen on 0.0.0.0
+    port: 4173, // matches your Nginx proxy_pass
+    allowedHosts: ["nostrpass.me", "www.nostrpass.me"],
+    // Or loosen it entirely (less strict): allowedHosts: true
+  },
 });
