@@ -1,11 +1,5 @@
-import type { Envelope, NostrEvent } from "../lib/types";
-import {
-  decryptWithVaultKey,
-  decryptWithVaultKey,
-  encryptWithVaultKey,
-} from "../lib/crypto";
-import { ensureKdf, ensureVaultKey, getPassphrase } from "./vault";
-import signer from "../lib/signer";
+import { decryptWithVaultKey } from "../lib/crypto";
+import { ensureVaultKey, buildVaultEvent } from "./vault";
 
 export const SETTINGS_D = "com.you.pm:settings:v1";
 
@@ -127,19 +121,5 @@ export async function buildSettingsEvent(
       ),
     ),
   };
-  const vk = getVaultKey();
-  if (!vk) throw new Error("Locked: no vault key in memory");
-  const kdf = ensureKdf();
-  const env = await encryptWithVaultKey(sanitized, vk, kdf);
-  const content = JSON.stringify(env);
-  const unsigned = {
-    kind: 30078,
-    created_at: Math.floor(Date.now() / 1000),
-    tags: [["d", SETTINGS_D]],
-    content,
-    pubkey,
-  };
-
-  const signed: NostrEvent = await signer.signEvent(unsigned);
-  return signed;
+  return buildVaultEvent(SETTINGS_D, sanitized, pubkey);
 }

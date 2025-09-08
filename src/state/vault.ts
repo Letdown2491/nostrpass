@@ -142,8 +142,8 @@ function opaqueIdentifier(id: string): string {
 }
 
 // Build a signed kind-30078 event for `id` with encrypted body
-export async function buildItemEvent(
-  id: string,
+export async function buildVaultEvent(
+  d: string,
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
@@ -154,7 +154,7 @@ export async function buildItemEvent(
   const ev = {
     kind: 30078,
     created_at: Math.floor(Date.now() / 1000),
-    tags: [["d", opaqueIdentifier(id)]],
+    tags: [["d", d]],
     content: JSON.stringify(env),
     pubkey,
   } as any;
@@ -162,4 +162,13 @@ export async function buildItemEvent(
   // @ts-ignore
   const signed = await signer.signEvent(ev);
   return signed as NostrEvent;
+}
+
+// Build a signed kind-30078 event for `id` with encrypted body
+export function buildItemEvent(
+  id: string,
+  body: any,
+  pubkey: string,
+): Promise<NostrEvent> {
+  return buildVaultEvent(opaqueIdentifier(id), body, pubkey);
 }
