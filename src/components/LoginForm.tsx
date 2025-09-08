@@ -150,6 +150,7 @@ export default function LoginForm({
               className="w-full"
               value={site}
               onChange={(e) => setSite(e.target.value)}
+              autoComplete="off"
               required
             />
           </label>
@@ -159,6 +160,7 @@ export default function LoginForm({
               className="w-full"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              autoComplete="off"
               required
             />
           </label>
@@ -172,6 +174,7 @@ export default function LoginForm({
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="off"
               required
             />
             <button
@@ -219,6 +222,7 @@ export default function LoginForm({
               type={showTotpSecret ? "text" : "password"}
               value={totpSecret}
               onChange={(e) => setTotpSecret(e.target.value)}
+              autoComplete="off"
               placeholder="e.g. JBSWY3DPEHPK3PXP"
             />
             <button
