@@ -1,7 +1,7 @@
 import { generateSecretKey, getPublicKey } from "nostr-tools";
 import { bytesToHex, randomBytes } from "@noble/hashes/utils";
 
-export interface NostrConnectDeepLink {
+interface NostrConnectDeepLink {
   uri: string;
   secretKey: Uint8Array;
   publicKey: string;

@@ -151,29 +151,6 @@ export async function decryptEnvelope(
   }
 }
 
-export async function decryptEnvelopeWithVaultKey(
-  envelope: Envelope,
-  vaultKey: Uint8Array,
-): Promise<any> {
-  await initSodium();
-  const itemKey = deriveItemKey(vaultKey, envelope.salt);
-  const ad = envelope.ad ? new TextEncoder().encode(envelope.ad) : null;
-  const ct = fromB64(envelope.ct);
-  const nonce = fromB64(envelope.nonce);
-  try {
-    const pt = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
-      null,
-      ct,
-      ad,
-      nonce,
-      itemKey,
-    );
-    return JSON.parse(new TextDecoder().decode(pt));
-  } finally {
-    itemKey.fill(0);
-  }
-}
-
 export function defaultKdf(): KdfParams {
   return {
     name: "argon2id",

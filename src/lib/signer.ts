@@ -4,7 +4,7 @@ import type { BunkerPointer } from "nostr-tools/nip46";
 import { getConversationKey, decrypt } from "nostr-tools/nip44";
 import { buildNostrConnectURI } from "./nostrConnect";
 
-export interface NostrSigner {
+interface NostrSigner {
   getPublicKey(): Promise<string>;
   signEvent(event: any): Promise<any>;
 }
