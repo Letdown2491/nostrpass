@@ -14,8 +14,13 @@ class SignerManager extends EventTarget implements NostrSigner {
   private pointer: BunkerPointer | null = null;
   private clientSecret: Uint8Array | null = null;
   private onauth = async (evt: any) => {
-    if (!this.clientSecret) throw new Error("missing client secret");
-    return finalizeEvent(evt, this.clientSecret);
+    if (this.signer) {
+      return this.signer.signEvent(evt);
+    }
+    if (this.clientSecret) {
+      return finalizeEvent(evt, this.clientSecret);
+    }
+    throw new Error("no signer or client secret available");
   };
 
   private makePool(): SimplePool {
