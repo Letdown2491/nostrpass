@@ -1,4 +1,4 @@
-import { generateSecretKey, SimplePool } from "nostr-tools";
+import { finalizeEvent, generateSecretKey, SimplePool } from "nostr-tools";
 import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
 import type { BunkerPointer } from "nostr-tools/nip46";
 import { getConversationKey, decrypt } from "nostr-tools/nip44";
@@ -13,6 +13,21 @@ class SignerManager extends EventTarget implements NostrSigner {
   private signer: NostrSigner | null = null;
   private pointer: BunkerPointer | null = null;
   private clientSecret: Uint8Array | null = null;
+  private onauth = async (evt: any) => {
+    if (!this.clientSecret) throw new Error("missing client secret");
+    return finalizeEvent(evt, this.clientSecret);
+  };
+
+  private makePool(): SimplePool {
+    const pool = new SimplePool() as any;
+    const origSub = pool.subscribe.bind(pool);
+    pool.subscribe = (relays: string[], filters: any, opts: any = {}) =>
+      origSub(relays, filters, { ...opts, onauth: this.onauth });
+    const origPub = pool.publish.bind(pool);
+    pool.publish = (relays: string[], ev: any, opts: any = {}) =>
+      origPub(relays, ev, { ...opts, onauth: this.onauth });
+    return pool as SimplePool;
+  }
 
   /**
    * Establish a signer. If a Nostr Connect URL is supplied a NIP-46
@@ -28,11 +43,17 @@ class SignerManager extends EventTarget implements NostrSigner {
         const sk = this.clientSecret ?? generateSecretKey();
         this.clientSecret = sk;
         this.pointer = pointer;
-        const bunker = new BunkerSigner(sk, pointer);
+        const bunker = new BunkerSigner(sk, pointer, {
+          pool: this.makePool(),
+          onauth: this.onauth as any,
+        });
         await bunker.connect();
         this.signer = bunker;
       } else if (this.pointer && this.clientSecret) {
-        const bunker = new BunkerSigner(this.clientSecret, this.pointer);
+        const bunker = new BunkerSigner(this.clientSecret, this.pointer, {
+          pool: this.makePool(),
+          onauth: this.onauth as any,
+        });
         await bunker.connect();
         this.signer = bunker;
       } else if ((globalThis as any).nostr) {
@@ -63,7 +84,7 @@ class SignerManager extends EventTarget implements NostrSigner {
       );
       this.clientSecret = secretKey;
 
-      const pool = new SimplePool();
+      const pool = this.makePool();
       let sub: { close: () => void } | undefined;
       const eventPromise = new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
@@ -74,6 +95,7 @@ class SignerManager extends EventTarget implements NostrSigner {
           relays,
           { kinds: [24133], "#p": [publicKey], limit: 1 },
           {
+            onauth: this.onauth,
             onevent: (ev) => {
               clearTimeout(timer);
               if (sub) sub.close();
