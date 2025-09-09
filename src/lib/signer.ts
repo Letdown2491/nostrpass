@@ -144,10 +144,7 @@ class SignerManager extends EventTarget implements NostrSigner {
           )} (signer's public key is inferred from event.pubkey when result is a string)`,
         );
       this.pointer = { pubkey: signerPub, relays, secret };
-      const bunker = new BunkerSigner(secretKey, this.pointer, {
-        pool: this.makePool(),
-        onauth: this.onauth as any,
-      });
+      const bunker = new BunkerSigner(secretKey, this.pointer);
       await bunker.connect();
       this.signer = bunker;
       this.dispatchEvent(new Event("open"));
