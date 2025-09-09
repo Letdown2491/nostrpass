@@ -21,9 +21,11 @@ if (
   (window.location.protocol === "https:" || isLocalhost)
 ) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((err) => {
-      console.error("Service worker registration failed:", err);
-    });
+    navigator.serviceWorker
+      .register("${import.meta.env.BASE_URL}sw.jss")
+      .catch((err) => {
+        console.error("Service worker registration failed:", err);
+      });
   });
 } else {
   console.warn("Service worker disabled due to insecure context");
