@@ -69,9 +69,13 @@ export default function SettingsModal({
         favicon = { ...favicon, customBase: undefined };
       }
       const sanitized = { ...form, relays, favicon };
-      await onSave(sanitized);
-      setStatus({ ok: true, text: "Saved" });
+      const savePromise = onSave(sanitized);
       onClose();
+      try {
+        await savePromise;
+      } catch (err: any) {
+        alert(err?.message || "Failed to save settings");
+      }
     } catch (err: any) {
       setStatus({ ok: false, text: err?.message || "Failed to save settings" });
     } finally {
