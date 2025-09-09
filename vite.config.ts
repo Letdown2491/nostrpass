@@ -20,9 +20,23 @@ export default defineConfig({
     include: ["crypto"],
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
-      plugins: [nodePolyfills({ exclude: ["vm"] })],
+      plugins: [
+        nodePolyfills({ exclude: ["vm"] }),
+        react(),
+        VitePWA({
+          strategies: "injectManifest",
+          srcDir: "src",
+          filename: "sw.ts",
+          injectManifest: {
+            // Avoid precaching *.map (saves space; PSI can still fetch them on-demand)
+            globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          },
+        }),
+      ],
       output: {
+        sourcemapExcludeSources: true,
         manualChunks(id) {
           if (id.includes("node_modules")) {
             if (id.includes("react")) return "react-vendor";
