@@ -46,6 +46,11 @@ export async function initSodium() {
   return sodium;
 }
 
+export async function preloadCrypto() {
+  await initSodium();
+  getArgon2Worker();
+}
+
 function randomBytes(len: number): Uint8Array {
   return sodium!.randombytes_buf(len);
 }
