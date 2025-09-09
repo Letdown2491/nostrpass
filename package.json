@@ -12,7 +12,6 @@
     "@noble/hashes": "^1.8.0",
     "@types/libsodium-wrappers": "^0.7.14",
     "@types/react-window": "1.8.8",
-    "@types/uuid": "^10.0.0",
     "@zxing/browser": "^0.1.5",
     "check-password-strength": "^3.0.0",
     "dexie": "^4.2.0",
@@ -23,7 +22,6 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-window": "^1.8.11",
-    "uuid": "^9.0.1",
     "vite-plugin-pwa": "^1.0.3",
     "workbox-core": "^7.3.0",
     "workbox-precaching": "^7.3.0"

@@ -1,5 +1,4 @@
 import React from "react";
-import { v4 as uuidv4 } from "uuid";
 import type { NostrEvent } from "../lib/types";
 import { buildItemEvent } from "../state/vault";
 import type { Settings } from "../state/settings";
@@ -57,7 +56,7 @@ export default function NewLoginModal({
     setSubmitting(true);
     setStatus({ ok: null, text: "" });
 
-    const id = uuidv4();
+    const id = crypto.randomUUID();
     const now = Math.floor(Date.now() / 1000);
     const chosenCategory = settings.categories.includes(values.category)
       ? values.category
