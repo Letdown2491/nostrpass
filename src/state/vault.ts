@@ -43,10 +43,11 @@ export async function onSignerConnect(ncUrl?: string): Promise<string> {
 
 export async function onRemoteSignerConnect(
   relays: string[],
+  remotePubkey: string,
   metadata?: Record<string, any>,
 ): Promise<string> {
   try {
-    await signer.connectWithDeepLink(relays, metadata);
+    await signer.connectWithDeepLink(relays, remotePubkey, metadata);
     const pk = await signer.getPublicKey();
     session.pubkey = pk;
     return pk;

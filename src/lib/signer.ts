@@ -79,11 +79,13 @@ class SignerManager extends EventTarget implements NostrSigner {
 
   async connectWithDeepLink(
     relays: string[],
+    remotePubkey: string,
     metadata?: Record<string, any>,
   ): Promise<void> {
     this.dispatchEvent(new Event("connecting"));
     try {
       const { uri, secretKey, publicKey, secret } = buildNostrConnectURI(
+        remotePubkey,
         relays,
         metadata,
       );

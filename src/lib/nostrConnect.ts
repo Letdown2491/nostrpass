@@ -10,13 +10,14 @@ interface NostrConnectDeepLink {
 }
 
 export function buildNostrConnectURI(
+  remotePubkey: string,
   relays: string[],
   metadata?: Record<string, any>,
 ): NostrConnectDeepLink {
   const secretKey = generateSecretKey();
   const publicKey = getPublicKey(secretKey);
   const secret = bytesToHex(randomBytes(32));
-  const url = new URL(`nostrconnect://${publicKey}`);
+  const url = new URL(`bunker://${remotePubkey}`);
   for (const r of relays) url.searchParams.append("relay", r);
   url.searchParams.set("secret", secret);
   if (metadata) {

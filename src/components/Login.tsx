@@ -2,6 +2,9 @@ import React from "react";
 import { onSignerConnect, onRemoteSignerConnect } from "../state/vault";
 import { DEFAULT_SETTINGS } from "../state/settings";
 import { LogoIcon } from "./Icons";
+
+const REMOTE_SIGNER_PUBKEY =
+  ((import.meta as any).env.VITE_REMOTE_SIGNER_PUBKEY as string) || "";
 export default function Login({
   onConnected,
 }: {
@@ -47,7 +50,7 @@ export default function Login({
       }
       const relays = relay ? [relay] : DEFAULT_SETTINGS.relays;
       setStatus("connecting");
-      const pk = await onRemoteSignerConnect(relays);
+      const pk = await onRemoteSignerConnect(relays, REMOTE_SIGNER_PUBKEY);
       setStatus("connected");
       onConnected(pk, relay);
     } catch (e: any) {
