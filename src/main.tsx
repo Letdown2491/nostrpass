@@ -16,17 +16,24 @@ const isLocalhost =
   window.location.hostname === "127.0.0.1" ||
   window.location.hostname === "[::1]";
 
-if (
-  "serviceWorker" in navigator &&
-  (window.location.protocol === "https:" || isLocalhost)
-) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("${import.meta.env.BASE_URL}sw.jss")
-      .catch((err) => {
-        console.error("Service worker registration failed:", err);
-      });
-  });
-} else {
-  console.warn("Service worker disabled due to insecure context");
+const base =
+  document.querySelector<HTMLBaseElement>("base")?.getAttribute("href") ?? "/";
+
+if ("serviceWorker" in navigator) {
+  const isLocal =
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.hostname === "[::1]";
+
+  if (location.protocol === "https:" || isLocal) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register(`${base}sw.js`, { scope: base })
+        .catch((err) =>
+          console.error("Service worker registration failed:", err),
+        );
+    });
+  } else {
+    console.warn("Service worker disabled due to insecure context");
+  }
 }
