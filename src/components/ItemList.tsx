@@ -6,7 +6,6 @@ import {
   buildItemEvent,
   NS_ITEM_PREFIX,
 } from "../state/vault";
-import EditLoginModal from "./EditLoginModal";
 import { totpFromBase32, clearTotpCache } from "../lib/totp";
 import type { Settings } from "../state/settings";
 import { NewLoginIcon } from "./Icons";
@@ -14,6 +13,7 @@ import ItemRow from "./ItemRow";
 import ItemTableHeader from "./ItemTableHeader";
 import useItemSorting from "../hooks/useItemSorting";
 
+const EditLoginModal = React.lazy(() => import("./EditLoginModal"));
 const STEP = 30; // 30-second TOTP step
 
 export default function ItemList({
@@ -371,15 +371,17 @@ export default function ItemList({
       </div>
 
       {/* Edit modal */}
-      <EditLoginModal
-        open={!!editItem}
-        onClose={() => setEditItem(null)}
-        pubkey={pubkey}
-        onPublish={onPublish}
-        item={editItem}
-        settings={settings}
-        onSaveSettings={onSaveSettings}
-      />
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <EditLoginModal
+          open={!!editItem}
+          onClose={() => setEditItem(null)}
+          pubkey={pubkey}
+          onPublish={onPublish}
+          item={editItem}
+          settings={settings}
+          onSaveSettings={onSaveSettings}
+        />
+      </React.Suspense>
     </div>
   );
 }

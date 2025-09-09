@@ -2,10 +2,8 @@ import React from "react";
 import Login from "./components/Login";
 import Unlock from "./components/Unlock";
 import ItemList from "./components/ItemList";
-import NewLoginModal from "./components/NewLoginModal";
 import ProfileBadge from "./components/ProfileBadge";
 import { LogoIcon } from "./components/Icons";
-import SettingsModal from "./components/SettingsModal";
 import { RelayPool } from "./lib/relays";
 import type { NostrEvent } from "./lib/types";
 import { toNpub } from "./lib/npub";
@@ -21,6 +19,9 @@ import {
   parseSettingsEvent,
   buildSettingsEvent,
 } from "./state/settings";
+
+const NewLoginModal = React.lazy(() => import("./components/NewLoginModal"));
+const SettingsModal = React.lazy(() => import("./components/SettingsModal"));
 
 export default function App() {
   const [pubkey, setPubkey] = React.useState<string | null>(null);
@@ -475,23 +476,27 @@ export default function App() {
       </section>
 
       {/* Modal for new login */}
-      <NewLoginModal
-        open={showNewLogin}
-        onClose={() => setShowNewLogin(false)}
-        pubkey={pubkey!}
-        onPublish={publish}
-        settings={settings}
-        onSaveSettings={saveSettings}
-      />
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <NewLoginModal
+          open={showNewLogin}
+          onClose={() => setShowNewLogin(false)}
+          pubkey={pubkey!}
+          onPublish={publish}
+          settings={settings}
+          onSaveSettings={saveSettings}
+        />
+      </React.Suspense>
 
       {/* Settings modal */}
-      <SettingsModal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        initial={settings}
-        onSave={saveSettings}
-        relayStatuses={relayStatuses}
-      />
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <SettingsModal
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          initial={settings}
+          onSave={saveSettings}
+          relayStatuses={relayStatuses}
+        />
+      </React.Suspense>
     </div>
   );
 }
