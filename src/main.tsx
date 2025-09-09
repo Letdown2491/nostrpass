@@ -31,7 +31,7 @@ if ("serviceWorker" in navigator) {
   if (location.protocol === "https:" || isLocal) {
     window.addEventListener("load", () => {
       navigator.serviceWorker
-        .register(`${base}sw.js`, { scope: base })
+        .register(`/sw.js`, { scope: base })
         .catch((err) =>
           console.error("Service worker registration failed:", err),
         );
