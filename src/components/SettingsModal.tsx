@@ -28,6 +28,7 @@ export default function SettingsModal({
     ok: boolean | null;
     text: string;
   }>({ ok: null, text: "" });
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
 
   React.useEffect(() => {
     if (!open) return;
@@ -101,7 +102,7 @@ export default function SettingsModal({
           <fieldset className="space-y-3">
             {/* Relay URLs */}
             <div className="space-y-2 text-sm">
-              <div className="text-xs">Relay URLs</div>
+              <div className="text-sm">Selected Relays</div>
               {DEFAULT_SETTINGS.relays.join(",") !== form.relays.join(",") && (
                 <div className="text-xs text-slate-400">
                   Using custom default relay: {form.relays.join(", ")}
@@ -149,7 +150,7 @@ export default function SettingsModal({
               })}
               <button
                 type="button"
-                className="px-5 py-1 w-full rounded-lg border border-blue-600 text-sm hover:bg-blue-600/40"
+                className="px-5 py-1 w-full rounded-lg border border-blue-600 text-sm hover:bg-blue-600/10"
                 onClick={() =>
                   setForm((s) => ({ ...s, relays: [...s.relays, ""] }))
                 }
@@ -159,7 +160,7 @@ export default function SettingsModal({
             </div>
 
             {/* Default sort */}
-            <div className="text-xs">Table sorting options</div>
+            <div className="text-sm">Table sorting options</div>
             <div className="text-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block">
                 <div className="text-slate-400 text-xs mb-1">
@@ -211,19 +212,6 @@ export default function SettingsModal({
               </label>
             </div>
 
-            {/* Truncate long fields */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.truncateFields}
-                className="accent-indigo-600"
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, truncateFields: e.target.checked }))
-                }
-              />
-              Truncate long titles and site addresses
-            </label>
-
             {/* Favicons on/off */}
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -237,133 +225,168 @@ export default function SettingsModal({
               Fetch remote favicons
             </label>
 
-            {/* Favicon source */}
-            <div className="text-sm space-y-2">
-              <select
-                className="w-full"
-                value={form.favicon.source}
-                onChange={(e) =>
-                  setForm((s) => ({
-                    ...s,
-                    favicon: {
-                      ...s.favicon,
-                      source: e.target.value as "ddg" | "custom",
-                    },
-                  }))
-                }
+            <div>
+              <button
+                type="button"
+                className="px-5 py-1 w-full rounded-lg border border-blue-600 text-sm hover:bg-blue-600/10"
+                onClick={() => setShowAdvanced((s) => !s)}
               >
-                <option value="ddg">DuckDuckGo ip3</option>
-                <option value="custom">Custom proxy base URL</option>
-              </select>
-              {form.favicon.source === "custom" && (
-                <input
-                  className="w-full"
-                  placeholder="https://icons.example.com/ip3/"
-                  value={form.favicon.customBase || ""}
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      favicon: { ...s.favicon, customBase: e.target.value },
-                    }))
-                  }
-                />
-              )}
-              <p className="text-xs">
-                Custom base should point to a service that returns{" "}
-                <code>.ico</code> for <em>hostname</em>. The app will request{" "}
-                <code>
-                  {`<base>`}
-                  {`<hostname>`}.ico
-                </code>
-                .
-              </p>
-            </div>
+                Advanced Settings
+              </button>
+              {showAdvanced && (
+                <div className="space-y-3 mt-2">
+                  {/* Favicon source */}
+                  <div className="text-sm space-y-2">
+                    <div className="text-sm">Favicon Service</div>
+                    <select
+                      className="w-full"
+                      value={form.favicon.source}
+                      onChange={(e) =>
+                        setForm((s) => ({
+                          ...s,
+                          favicon: {
+                            ...s.favicon,
+                            source: e.target.value as "ddg" | "custom",
+                          },
+                        }))
+                      }
+                    >
+                      <option value="ddg">DuckDuckGo ip3</option>
+                      <option value="custom">Custom proxy base URL</option>
+                    </select>
+                    {form.favicon.source === "custom" && (
+                      <input
+                        className="w-full"
+                        placeholder="https://icons.example.com/ip3/"
+                        value={form.favicon.customBase || ""}
+                        onChange={(e) =>
+                          setForm((s) => ({
+                            ...s,
+                            favicon: {
+                              ...s.favicon,
+                              customBase: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    )}
+                    <p className="text-xs">
+                      Custom base should point to a service that returns{" "}
+                      <code>.ico</code> for <em>hostname</em>. The app will
+                      request{" "}
+                      <code>
+                        {`<base>`}
+                        {`<hostname>`}.ico
+                      </code>
+                      .
+                    </p>
+                  </div>
+                  {/* Truncate long fields */}
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.truncateFields}
+                      className="accent-indigo-600"
+                      onChange={(e) =>
+                        setForm((s) => ({
+                          ...s,
+                          truncateFields: e.target.checked,
+                        }))
+                      }
+                    />
+                    Truncate long titles and site addresses
+                  </label>
+                  {/* Clipboard clear */}
+                  <div className="text-sm space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={form.clipboardClearSec !== null}
+                        className="accent-indigo-600"
+                        onChange={(e) =>
+                          setForm((s) => ({
+                            ...s,
+                            clipboardClearSec: e.target.checked
+                              ? (s.clipboardClearSec ??
+                                DEFAULT_SETTINGS.clipboardClearSec)
+                              : null,
+                          }))
+                        }
+                      />
+                      Clear clipboard contents after X seconds
+                    </label>
+                    {form.clipboardClearSec !== null && (
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full"
+                        value={form.clipboardClearSec}
+                        onChange={(e) =>
+                          setForm((s) => ({
+                            ...s,
+                            clipboardClearSec: Number(e.target.value),
+                          }))
+                        }
+                      />
+                    )}
+                  </div>
 
-            {/* Clipboard clear */}
-            <div className="text-sm space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.clipboardClearSec !== null}
-                  className="accent-indigo-600"
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      clipboardClearSec: e.target.checked
-                        ? (s.clipboardClearSec ??
-                          DEFAULT_SETTINGS.clipboardClearSec)
-                        : null,
-                    }))
-                  }
-                />
-                Clear clipboard contents after X seconds
-              </label>
-              {form.clipboardClearSec !== null && (
-                <input
-                  type="number"
-                  min={1}
-                  className="w-full"
-                  value={form.clipboardClearSec}
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      clipboardClearSec: Number(e.target.value),
-                    }))
-                  }
-                />
+                  {/* Auto-lock */}
+                  <div className="text-sm space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={form.autolockSec !== null}
+                        className="accent-indigo-600"
+                        onChange={(e) =>
+                          setForm((s) => ({
+                            ...s,
+                            autolockSec: e.target.checked
+                              ? (s.autolockSec ?? DEFAULT_SETTINGS.autolockSec)
+                              : null,
+                          }))
+                        }
+                      />
+                      Lock vault after X seconds of inactivity
+                    </label>
+                    {form.autolockSec !== null && (
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full"
+                        value={form.autolockSec}
+                        onChange={(e) =>
+                          setForm((s) => ({
+                            ...s,
+                            autolockSec: Number(e.target.value),
+                          }))
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* Show deleted */}
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.showDeleted}
+                      className="accent-indigo-600"
+                      onChange={(e) =>
+                        setForm((s) => ({
+                          ...s,
+                          showDeleted: e.target.checked,
+                        }))
+                      }
+                    />
+                    Display deleted items
+                  </label>
+                  <span className="text-xs">
+                    Some relays may not support note deletion, so we use some
+                    magic to hide them.
+                  </span>
+                </div>
               )}
             </div>
-
-            {/* Auto-lock */}
-            <div className="text-sm space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={form.autolockSec !== null}
-                  className="accent-indigo-600"
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      autolockSec: e.target.checked
-                        ? (s.autolockSec ?? DEFAULT_SETTINGS.autolockSec)
-                        : null,
-                    }))
-                  }
-                />
-                Lock vault after X seconds of inactivity
-              </label>
-              {form.autolockSec !== null && (
-                <input
-                  type="number"
-                  min={1}
-                  className="w-full"
-                  value={form.autolockSec}
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      autolockSec: Number(e.target.value),
-                    }))
-                  }
-                />
-              )}
-            </div>
-
-            {/* Show deleted */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.showDeleted}
-                className="accent-indigo-600"
-                onChange={(e) =>
-                  setForm((s) => ({ ...s, showDeleted: e.target.checked }))
-                }
-              />
-              Display deleted items
-            </label>
-            <span className="text-xs">
-              Some relays may not support note deletion, so we use some magic to
-              hide them.
-            </span>
           </fieldset>
 
           <div className="flex items-center justify-end gap-2 pt-2">
