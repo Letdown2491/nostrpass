@@ -17,10 +17,7 @@ import useItemSorting from "../hooks/useItemSorting";
 const EditLoginModal = React.lazy(() => import("./EditLoginModal"));
 const STEP = 30; // 30-second TOTP step
 const ROW_HEIGHT = 48;
-const TableBody = React.forwardRef<
-  HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->((p, r) => <tbody ref={r} {...p} />);
+const DEFAULT_VIEWPORT_HEIGHT = 400;
 
 export default function ItemList({
   events,
@@ -73,6 +70,19 @@ export default function ItemList({
     setInputQuery(query);
   }, [query]);
 
+  const [viewportHeight, setViewportHeight] = React.useState(
+    DEFAULT_VIEWPORT_HEIGHT,
+  );
+
+  React.useEffect(() => {
+    const update = () => {
+      setViewportHeight(Math.max(window.innerHeight - 200, ROW_HEIGHT));
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   // live TOTP codes map (idOrD -> code), refresh ONLY every 30s boundary
   const [otpMap, setOtpMap] = React.useState<Record<string, string>>({});
   const [counter, setCounter] = React.useState(
@@ -120,25 +130,28 @@ export default function ItemList({
       setPending(events.length);
       onLoaded();
 
-      const promises = events.map(async (ev) => {
-        const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
-        if (!d.startsWith(NS_ITEM_PREFIX)) return null;
-        const obj = (await decryptItemContentUsingSession(
-          ev.content,
-        )) as LoginItem;
-        return { d, ...obj } as ItemRow;
-      });
-
-      const results = await Promise.allSettled(promises);
-      if (!active) return;
-
-      const decoded = results
-        .filter(
-          (r): r is PromiseFulfilledResult<ItemRow | null> =>
-            r.status === "fulfilled",
-        )
-        .map((r) => r.value)
-        .filter((r): r is ItemRow => !!r);
+      const decoded: ItemRow[] = [];
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < events.length; i += BATCH_SIZE) {
+        const batch = events.slice(i, i + BATCH_SIZE);
+        const batchPromises = batch.map(async (ev) => {
+          const d = ev.tags.find((t) => t[0] === "d")?.[1] ?? "";
+          if (!d.startsWith(NS_ITEM_PREFIX)) return null;
+          try {
+            const obj = (await decryptItemContentUsingSession(
+              ev.content,
+            )) as LoginItem;
+            return { d, ...obj } as ItemRow;
+          } catch {
+            return null;
+          }
+        });
+        const results = await Promise.all(batchPromises);
+        if (!active) return;
+        decoded.push(...results.filter((r): r is ItemRow => !!r));
+        setPending((p) => Math.max(0, p - batch.length));
+        await new Promise((r) => setTimeout(r));
+      }
 
       const map = new Map<string, ItemRow>();
       for (const it of decoded) {
@@ -344,9 +357,12 @@ export default function ItemList({
 
       <div className="overflow-x-auto">
         <List
-          height={Math.max(visible.length, 1) * 48}
+          height={Math.min(
+            viewportHeight,
+            Math.max(visible.length, 1) * ROW_HEIGHT,
+          )}
           itemCount={visible.length}
-          itemSize={48}
+          itemSize={ROW_HEIGHT}
           width="100%"
           outerElementType={Table}
           innerElementType={TableBody}

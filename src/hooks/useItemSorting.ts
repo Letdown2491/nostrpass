@@ -1,4 +1,5 @@
 import React from "react";
+import { inPlaceSort } from "fast-sort";
 import type { Settings } from "../state/settings";
 
 export type SortKey = "title" | "category" | "site" | "username" | "updatedAt";
@@ -8,6 +9,7 @@ export default function useItemSorting(rows: any[], settings: Settings) {
   const [sortBy, setSortBy] = React.useState<SortKey>("title");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
   const sortInitRef = React.useRef(false);
+  const sortedRef = React.useRef<any[]>([]);
 
   // initialize sort from settings once
   React.useEffect(() => {
@@ -19,8 +21,10 @@ export default function useItemSorting(rows: any[], settings: Settings) {
     }
   }, [settings?.defaultSort]);
 
+  const deferredQuery = React.useDeferredValue(query);
+
   const filtered = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = deferredQuery.trim().toLowerCase();
     return rows
       .filter((r) => (settings.showDeleted ? true : !r.deleted))
       .filter((r) => {
@@ -29,17 +33,22 @@ export default function useItemSorting(rows: any[], settings: Settings) {
           `${r.title ?? ""} ${r.site ?? ""} ${r.username ?? ""} ${r.category ?? ""} ${r.type ?? ""}`.toLowerCase();
         return hay.includes(q);
       });
-  }, [rows, query, settings.showDeleted]);
+  }, [rows, deferredQuery, settings.showDeleted]);
 
   const visible = React.useMemo(() => {
-    const arr = filtered.slice();
-    arr.sort((a, b) => {
-      const va = a[sortBy] ?? (sortBy === "category" ? "Uncategorized" : "");
-      const vb = b[sortBy] ?? (sortBy === "category" ? "Uncategorized" : "");
-      let cmp = 0;
-      if (sortBy === "updatedAt") cmp = (va || 0) - (vb || 0);
-      else cmp = String(va).localeCompare(String(vb));
-      return sortDir === "asc" ? cmp : -cmp;
+    if (sortedRef.current !== filtered) {
+      sortedRef.current = filtered.slice();
+    }
+    const arr = sortedRef.current;
+    inPlaceSort(arr)[sortDir === "asc" ? "asc" : "desc"]((r) => {
+      const v =
+        r[sortBy] ??
+        (sortBy === "category"
+          ? "Uncategorized"
+          : sortBy === "updatedAt"
+            ? 0
+            : "");
+      return sortBy === "updatedAt" ? v || 0 : String(v);
     });
     return arr;
   }, [filtered, sortBy, sortDir]);
