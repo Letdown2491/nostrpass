@@ -1,5 +1,6 @@
 import React from "react";
 import type { LoginItem, NostrEvent, PublishResult } from "../lib/types";
+import { FixedSizeList as List } from "react-window";
 import {
   decryptItemContentUsingSession,
   getPassphrase,
@@ -15,6 +16,11 @@ import useItemSorting from "../hooks/useItemSorting";
 
 const EditLoginModal = React.lazy(() => import("./EditLoginModal"));
 const STEP = 30; // 30-second TOTP step
+const ROW_HEIGHT = 48;
+const TableBody = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>((p, r) => <tbody ref={r} {...p} />);
 
 export default function ItemList({
   events,
@@ -288,6 +294,30 @@ export default function ItemList({
     [flagBusy, onPublish, pubkey],
   );
 
+  const Table = React.forwardRef<
+    HTMLTableElement,
+    React.HTMLAttributes<HTMLTableElement>
+  >((p, r) => (
+    <table ref={r} className="w-full text-sm table-fixed" {...p}>
+      <ItemTableHeader toggleSort={toggleSort} sortIndicator={sortIndicator} />
+      {visible.length === 0 && pending === 0 ? (
+        <tbody>
+          <tr>
+            <td colSpan={5} className="py-6 text-slate-400 text-center">
+              No items yet.
+            </td>
+          </tr>
+        </tbody>
+      ) : (
+        p.children
+      )}
+    </table>
+  ));
+
+  const TableBody = React.forwardRef<HTMLTableSectionElement>((p, r) => (
+    <tbody ref={r} {...p} />
+  ));
+
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -313,61 +343,38 @@ export default function ItemList({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <ItemTableHeader
-            toggleSort={toggleSort}
-            sortIndicator={sortIndicator}
-          />
-          <tbody>
-            {visible.length === 0 && pending === 0 && (
-              <tr>
-                <td colSpan={4} className="py-6 text-slate-400 text-center">
-                  No items yet.
-                </td>
-              </tr>
-            )}
-            {visible.map((it) => {
-              const isBusy = !!busy[it.id];
-              const key = it.id ?? it.d;
-              const code = otpMap[key] || "—";
+        <List
+          height={Math.max(visible.length, 1) * 48}
+          itemCount={visible.length}
+          itemSize={48}
+          width="100%"
+          outerElementType={Table}
+          innerElementType={TableBody}
+          itemKey={(i) => visible[i].id ?? visible[i].d}
+        >
+          {({ index, style }) => {
+            const it = visible[index];
+            const isBusy = !!busy[it.id];
+            const key = it.id ?? it.d;
+            const code = otpMap[key] || "—";
 
-              return (
-                <ItemRow
-                  key={key}
-                  item={it}
-                  code={code}
-                  settings={settings}
-                  isBusy={isBusy}
-                  onEdit={setEditItem}
-                  onDelete={deleteItem}
-                  onRestore={restoreItem}
-                  badFavicons={badFavicons}
-                  setBadFavicons={setBadFavicons}
-                  faviconRetry={faviconRetry}
-                />
-              );
-            })}
-            {Array.from({ length: pending }).map((_, i) => (
-              <tr
-                key={`placeholder-${i}`}
-                className="border-b border-slate-800/60 animate-pulse"
-              >
-                <td className="py-2 px-2">
-                  <div className="h-5 w-24 bg-slate-700 rounded" />
-                </td>
-                <td className="py-2 px-2">
-                  <div className="h-5 w-24 bg-slate-700 rounded" />
-                </td>
-                <td className="py-2 px-2">
-                  <div className="h-5 w-24 bg-slate-700 rounded" />
-                </td>
-                <td className="py-2 px-2 text-right">
-                  <div className="h-5 w-8 bg-slate-700 rounded ml-auto" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            return (
+              <ItemRow
+                style={style}
+                item={it}
+                code={code}
+                settings={settings}
+                isBusy={isBusy}
+                onEdit={setEditItem}
+                onDelete={deleteItem}
+                onRestore={restoreItem}
+                badFavicons={badFavicons}
+                setBadFavicons={setBadFavicons}
+                faviconRetry={faviconRetry}
+              />
+            );
+          }}
+        </List>
       </div>
 
       {/* Edit modal */}

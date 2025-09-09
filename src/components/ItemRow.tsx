@@ -4,6 +4,8 @@ import { copyText, copyPassword } from "../lib/clipboard";
 import { toHref, hostnameFromSite } from "../lib/url";
 import { OfflineFavicon, RestoreIcon, SpinnerIcon } from "./Icons";
 
+export const ROW_HEIGHT = 48;
+
 type Props = {
   item: any;
   code: string;
@@ -65,7 +67,7 @@ const ItemRow = React.memo(function ItemRow({
       : "";
 
   return (
-    <tr style={style} className="border-b border-slate-800/60">
+    <tr className="h-12 border-b border-slate-800/60">
       <td className="py-2 px-2">
         <span className="inline-flex items-center gap-2">
           {showFavicon ? (
