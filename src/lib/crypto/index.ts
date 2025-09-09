@@ -1,4 +1,3 @@
-import sodium from "libsodium-wrappers";
 import { hkdf } from "@noble/hashes/hkdf";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
@@ -10,6 +9,8 @@ const pending = new Map<
   number,
   { resolve: (value: Uint8Array) => void; reject: (reason: any) => void }
 >();
+
+let sodium: any;
 
 function getArgon2Worker(): Worker {
   if (!argon2Worker) {
@@ -37,13 +38,16 @@ function getArgon2Worker(): Worker {
 }
 
 export async function initSodium() {
-  if ((sodium as any)._sodium_initialized) return;
-  await sodium.ready;
-  (sodium as any)._sodium_initialized = true;
+  if (!sodium) {
+    const mod = await import("libsodium-wrappers");
+    sodium = mod.default;
+    await sodium.ready;
+  }
+  return sodium;
 }
 
 function randomBytes(len: number): Uint8Array {
-  return sodium.randombytes_buf(len);
+  return sodium!.randombytes_buf(len);
 }
 
 export function generatePassword(length = 16): string {
@@ -63,17 +67,18 @@ export function generatePassword(length = 16): string {
 }
 
 export function toB64(u8: Uint8Array): string {
-  return sodium.to_base64(u8, sodium.base64_variants.ORIGINAL);
+  return sodium!.to_base64(u8, sodium!.base64_variants.ORIGINAL);
 }
 
 function fromB64(b: string): Uint8Array {
-  return sodium.from_base64(b, sodium.base64_variants.ORIGINAL);
+  return sodium!.from_base64(b, sodium!.base64_variants.ORIGINAL);
 }
 
 export async function deriveVaultKey(
   passphrase: Uint8Array,
   kdf: KdfParams,
 ): Promise<Uint8Array> {
+  await initSodium();
   const worker = getArgon2Worker();
   const salt = fromB64(kdf.salt_b64);
   // Copy passphrase to transfer to worker securely
@@ -99,7 +104,7 @@ export async function encryptEnvelope(
   vaultKey: Uint8Array,
   kdf: KdfParams,
 ): Promise<Envelope> {
-  await initSodium();
+  const sodium = await initSodium();
   const nonce = randomBytes(
     sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES,
   );
@@ -130,7 +135,7 @@ export async function decryptEnvelope(
   envelope: Envelope,
   passphrase: Uint8Array,
 ): Promise<any> {
-  await initSodium();
+  const sodium = await initSodium();
   const vaultKey = await deriveVaultKey(passphrase, envelope.kdf);
   const itemKey = deriveItemKey(vaultKey, envelope.salt);
   const ad = envelope.ad ? new TextEncoder().encode(envelope.ad) : null;
@@ -163,7 +168,7 @@ export async function decryptWithVaultKey(
   envelope: Envelope,
   vaultKey: Uint8Array,
 ): Promise<any> {
-  await initSodium();
+  const sodium = await initSodium();
   const itemKey = deriveItemKey(vaultKey, envelope.salt);
   const ad = envelope.ad ? new TextEncoder().encode(envelope.ad) : null;
   const ct = fromB64(envelope.ct);
@@ -182,7 +187,8 @@ export async function decryptWithVaultKey(
   }
 }
 
-export function defaultKdf(): KdfParams {
+export async function defaultKdf(): Promise<KdfParams> {
+  await initSodium();
   return {
     name: "argon2id",
     salt_b64: toB64(randomBytes(16)),

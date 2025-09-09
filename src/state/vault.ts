@@ -56,14 +56,15 @@ export async function onRemoteSignerConnect(
   }
 }
 
-export function ensureKdf(): KdfParams {
-  if (!session.kdf) session.kdf = defaultKdf();
+export async function ensureKdf(): Promise<KdfParams> {
+  if (!session.kdf) session.kdf = await defaultKdf();
   return session.kdf;
 }
 
 export async function unlockVault(passphrase: string): Promise<void> {
+  await initSodium();
   session.passphrase = utf8ToBytes(passphrase);
-  const kdf = ensureKdf();
+  const kdf = await ensureKdf();
   session.vaultKey = await deriveVaultKey(session.passphrase, kdf);
   // Zero out the original passphrase string to avoid leaving sensitive data in memory
   passphrase = "";
@@ -74,7 +75,6 @@ export async function unlockVault(passphrase: string): Promise<void> {
     session.vaultKey = null;
   }
   session.kdf = null;
-  await initSodium();
 }
 
 export function lockVault(): void {
@@ -147,9 +147,10 @@ export async function buildVaultEvent(
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
+  await initSodium();
   const vk = session.vaultKey;
   if (!vk) throw new Error("Locked: no vault key in memory");
-  const kdf = ensureKdf();
+  const kdf = await ensureKdf();
   const env = await encryptWithVaultKey(body, vk, kdf);
   const ev = {
     kind: 30078,
@@ -165,10 +166,11 @@ export async function buildVaultEvent(
 }
 
 // Build a signed kind-30078 event for `id` with encrypted body
-export function buildItemEvent(
+export async function buildItemEvent(
   id: string,
   body: any,
   pubkey: string,
 ): Promise<NostrEvent> {
+  await initSodium();
   return buildVaultEvent(opaqueIdentifier(id), body, pubkey);
 }
