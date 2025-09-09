@@ -4,18 +4,6 @@ import { VitePWA } from "vite-plugin-pwa";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
-  plugins: [
-    nodePolyfills({ exclude: ["vm"] }), // keep just one
-    react(),
-    VitePWA({
-      strategies: "injectManifest",
-      srcDir: "src",
-      filename: "sw.ts",
-      injectManifest: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-      },
-    }),
-  ],
   optimizeDeps: {
     include: ["crypto"],
   },
