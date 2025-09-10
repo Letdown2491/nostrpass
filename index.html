@@ -8,6 +8,10 @@
             name="description"
             content="NostrPass is a decentralized password manager built on Nostr. Securely store and sync logins across devices with end-to-end encryption, open-source security, and Nostr-ready authentication."
         />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; connect-src 'self' https: wss: ws:; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; font-src 'self'; object-src 'none'; base-uri 'self';"
+        />
         <title>NostrPass</title>
         <link rel="icon" href="favicon.ico" />
         <link rel="manifest" href="/manifest.webmanifest" />
