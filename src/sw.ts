@@ -21,7 +21,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(event.request.url);
   const isIcon =
     event.request.destination === "image" && url.pathname.endsWith(".ico");
-  if (!isIcon) return;
+  if (!isIcon || url.origin !== self.location.origin) return;
 
   event.respondWith(
     (async () => {
