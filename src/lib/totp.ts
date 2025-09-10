@@ -67,11 +67,14 @@ export async function totpFromBase32(
   step = 30,
   digits = 6,
 ): Promise<string | null> {
+  let sec: Uint8Array | undefined;
+  let buf8: Uint8Array | undefined;
   try {
     const normalized = secretB32.toUpperCase().replace(/[\s=]/g, "");
-    const sec = base32Decode(normalized);
+    sec = base32Decode(normalized);
     const buf = new ArrayBuffer(sec.length);
-    new Uint8Array(buf).set(sec);
+    buf8 = new Uint8Array(buf);
+    buf8.set(sec);
     const digest = await crypto.subtle.digest("SHA-256", buf);
     const hash = bufToHex(digest);
     let key = keyCache.get(hash);
@@ -85,9 +88,17 @@ export async function totpFromBase32(
       );
       keyCache.set(hash, key);
     }
+    // Clear secret material once the key is derived
+    sec.fill(0);
+    buf8.fill(0);
+
     const counter = Math.floor(epochMs / 1000 / step);
     return await hotp(key, counter, digits);
   } catch {
     return null;
+  } finally {
+    // Ensure buffers are cleared in error paths
+    sec?.fill(0);
+    buf8?.fill(0);
   }
 }
